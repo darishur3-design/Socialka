@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Авторизация</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="css/auth.css">
+</head>
+
+<body>
+
+<a href="index.html" class="page-back-btn">←</a>
+
+<div class="auth-card">
+
+<div class="auth-logo">
+<img src="images/logo-nngasu.png">
+<span>Учет социальной активности студентов</span>
+</div>
+
+<h1 id="authTitle">Авторизация</h1>
+
+<form class="auth-form" id="authForm">
+
+<input id="emailInput" type="email" placeholder="Email" required>
+
+<input id="passwordInput" type="password" placeholder="Пароль" required>
+
+<input
+id="repeatPassword"
+type="password"
+placeholder="Повторите пароль"
+style="display:none"
+/>
+
+<input
+id="nameInput"
+type="text"
+placeholder="Имя Фамилия"
+style="display:none"
+/>
+
+<button type="submit" class="auth-submit" id="submitBtn">
+Войти
+</button>
+
+</form>
+
+<div class="auth-footer">
+<span id="footerText">Нет аккаунта?</span>
+<a href="#" id="switchBtn">Регистрация</a>
+</div>
+
+</div>
+
+<script type="module" src="js/auth.js"></script>
+
+</body>
+</html>

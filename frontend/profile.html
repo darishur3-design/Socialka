@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Профиль</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="header">
+
+  <div class="header-left">
+    <a href="index.html">
+      <img src="images/logo-nngasu.png">
+    </a>
+  </div>
+
+  <div class="header-title">
+    Профиль
+  </div>
+
+  <div class="header-right">
+
+    <!-- кнопка входа -->
+    <a href="auth.html" class="auth-btn" id="loginBtn">
+      Авторизация
+    </a>
+
+    <!-- блок пользователя -->
+    <div id="userBlock" style="display:none;">
+      <img src="images/avatar.png" class="avatar-small">
+      <span id="userName"></span>
+    </div>
+
+  </div>
+
+</header>
+
+
+<!-- ===== LAYOUT ===== -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <button class="nav-btn" onclick="location.href='index.html'">🏠 Главная</button>
+    <button class="nav-btn">📅 Мероприятия</button>
+    <button class="nav-btn">🏆 Рейтинг</button>
+    <button class="nav-btn">👥 Сообщества</button>
+    <button class="nav-btn active">👤 Профиль</button>
+  </aside>
+
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <div class="profile" id="profileContainer" style="display:none;">
+
+      <!-- logout -->
+      <button id="logoutBtn" class="logout-btn">Выйти</button>
+
+      <!-- единственный аватар -->
+      <img src="images/avatar.png" class="avatar">
+
+      <!-- данные пользователя -->
+      <div class="profile-info">
+
+        <h2 id="profileName">Загрузка...</h2>
+
+        <p class="profile-email" id="profileEmail">
+          email@example.com
+        </p>
+
+        <p>
+          Роль:
+          <strong id="profileRole">Загрузка...</strong>
+        </p>
+
+      </div>
+
+    </div>
+
+    <!-- если не авторизован -->
+    <div id="notAuth" style="display:none;">
+      <h2>Вы не авторизованы</h2>
+      <a href="auth.html">Войти</a>
+    </div>
+
+  </main>
+
+</div>
+
+
+<!-- Firebase auth -->
+<script type="module" src="js/auth-state.js"></script>
+
+<!-- загрузка профиля -->
+<script type="module" src="js/profile.js"></script>
+
+<!-- logout -->
+<script type="module">
+import { auth, signOut } from "./js/firebase.js";
+
+document.getElementById("logoutBtn").onclick = async () => {
+  await signOut(auth);
+  window.location.href = "auth.html";
+};
+</script>
+
+</body>
+</html>
