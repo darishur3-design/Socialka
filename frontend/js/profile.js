@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { auth } from "./firebase.js";
 import {
   onAuthStateChanged
@@ -51,4 +52,20 @@ onAuthStateChanged(auth, async (user) => {
   } catch (err) {
     console.error("Ошибка загрузки профиля:", err);
   }
+=======
+document.getElementById("profileName").textContent = user.name;
+document.getElementById("profileRole").textContent = user.role;
+
+if (user.role === "student") {
+    document.getElementById("studentId").textContent = user.studentId;
+    document.getElementById("positionRow").classList.add("hidden");
+} else {
+    document.getElementById("userPosition").textContent = user.position;
+    document.getElementById("studentRow").classList.add("hidden");
+    document.getElementById("adminPanel").classList.remove("hidden");
+}
+
+user.events.forEach(e => {
+    document.getElementById("userEvents").innerHTML += `<li>${e}</li>`;
+>>>>>>> 1cbf2af36c89a5683f6e9b7b65985ff62edb681f
 });

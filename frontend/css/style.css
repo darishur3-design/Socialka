@@ -145,6 +145,7 @@ body {
     backdrop-filter: blur(14px);
     box-shadow: 0 25px 60px rgba(0,0,0,0.15);
 }
+<<<<<<< HEAD
 .profile-avatar img {
   width: 150px;
   height: 150px;
@@ -162,3 +163,5 @@ body {
   height: 40px;
   border-radius: 50%;
 }
+=======
+>>>>>>> 1cbf2af36c89a5683f6e9b7b65985ff62edb681f

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   auth,
   createUserWithEmailAndPassword,
@@ -42,12 +43,34 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== UI =====
 
   function showRegister() {
+=======
+const title = document.getElementById("authTitle");
+const switchBtn = document.getElementById("switchBtn");
+const submitBtn = document.getElementById("submitBtn");
+const repeatPassword = document.getElementById("repeatPassword");
+const backBtn = document.getElementById("backBtn");
+const footerText = document.getElementById("footerText");
+
+let isRegister = false;
+
+switchBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    showRegister();
+});
+
+backBtn.addEventListener("click", () => {
+    showLogin();
+});
+
+function showRegister() {
+>>>>>>> 1cbf2af36c89a5683f6e9b7b65985ff62edb681f
     isRegister = true;
 
     title.textContent = "Регистрация";
     submitBtn.textContent = "Зарегистрироваться";
 
     repeatPassword.style.display = "block";
+<<<<<<< HEAD
     nameInput.style.display = "block";
 
     if (backBtn) backBtn.style.display = "flex";
@@ -57,12 +80,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showLogin() {
+=======
+    backBtn.style.display = "flex";
+
+    footerText.textContent = "Уже есть аккаунт?";
+    switchBtn.textContent = "Войти";
+}
+
+function showLogin() {
+>>>>>>> 1cbf2af36c89a5683f6e9b7b65985ff62edb681f
     isRegister = false;
 
     title.textContent = "Авторизация";
     submitBtn.textContent = "Войти";
 
     repeatPassword.style.display = "none";
+<<<<<<< HEAD
     nameInput.style.display = "none";
 
     if (backBtn) backBtn.style.display = "none";
@@ -153,3 +186,10 @@ window.location.href = "profile.html";
   });
 
 });
+=======
+    backBtn.style.display = "none";
+
+    footerText.textContent = "Нет аккаунта?";
+    switchBtn.textContent = "Регистрация";
+}
+>>>>>>> 1cbf2af36c89a5683f6e9b7b65985ff62edb681f
