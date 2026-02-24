@@ -1,0 +1,25 @@
+# Firebase keys
+**/firebase-key.json
+**/firebase-service-account.json
+**/serviceAccountKey.json
+
+# Target folders
+**/target/
+**/build/
+**/out/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Logs
+*.log
+*.tmp
+
+# OS files
+Thumbs.db
+.DS_Store

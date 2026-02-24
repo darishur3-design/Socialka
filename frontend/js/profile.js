@@ -1,26 +1,36 @@
-<<<<<<< HEAD
 import { auth } from "./firebase.js";
 import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+// Получаем все элементы DOM
 const profileName = document.getElementById("profileName");
 const profileEmail = document.getElementById("profileEmail");
 const profileRole = document.getElementById("profileRole");
+const studentId = document.getElementById("studentId");
+const userPosition = document.getElementById("userPosition");
+const studentRow = document.getElementById("studentRow");
+const positionRow = document.getElementById("positionRow");
+const adminPanel = document.getElementById("adminPanel");
+const userEvents = document.getElementById("userEvents");
+const profileContainer = document.getElementById("profileContainer");
+const notAuth = document.getElementById("notAuth");
 
 onAuthStateChanged(auth, async (user) => {
-
-  // если не авторизован → на страницу входа
+  // если не авторизован → показываем сообщение
   if (!user) {
-    window.location.href = "auth.html";
+    if (profileContainer) profileContainer.style.display = "none";
+    if (notAuth) notAuth.style.display = "block";
     return;
   }
 
-  try {
+  // если авторизован - показываем профиль
+  if (profileContainer) profileContainer.style.display = "block";
+  if (notAuth) notAuth.style.display = "none";
 
+  try {
     // получаем firebase token
     const token = await user.getIdToken();
-
     console.log("userId:", user.uid);
 
     // запрос к backend
@@ -28,7 +38,7 @@ onAuthStateChanged(auth, async (user) => {
       `http://localhost:8080/api/users/${user.uid}`,
       {
         headers: {
-          "Authorization": token
+          "Authorization": `Bearer ${token}`
         }
       }
     );
@@ -39,33 +49,44 @@ onAuthStateChanged(auth, async (user) => {
 
     const data = await response.json();
 
-    // безопасный вывод данных
-    profileName.textContent =
-      `${data.firstName || ""} ${data.lastName || ""}`.trim() || "Без имени";
+    // ОСНОВНЫЕ ДАННЫЕ - из первой версии
+    if (profileName) {
+      profileName.textContent =
+        `${data.firstName || ""} ${data.lastName || ""}`.trim() || "Без имени";
+    }
+    
+    if (profileEmail) {
+      profileEmail.textContent = data.email || "—";
+    }
+    
+    if (profileRole) {
+      profileRole.textContent = data.role || "Базовый пользователь";
+    }
 
-    profileEmail.textContent =
-      data.email || "—";
+    // ДОПОЛНИТЕЛЬНАЯ ЛОГИКА - из второй версии
+    if (data.role === "student") {
+      if (studentId) studentId.textContent = data.studentId || "—";
+      if (positionRow) positionRow.classList.add("hidden");
+      if (studentRow) studentRow.classList.remove("hidden");
+    } else {
+      if (userPosition) userPosition.textContent = data.position || "—";
+      if (studentRow) studentRow.classList.add("hidden");
+      if (positionRow) positionRow.classList.remove("hidden");
+      if (adminPanel) adminPanel.classList.remove("hidden");
+    }
 
-    profileRole.textContent =
-      data.role || "Базовый пользователь";
+    // Отображение событий
+    if (userEvents) {
+      userEvents.innerHTML = ""; // очищаем перед добавлением
+      if (data.events && Array.isArray(data.events)) {
+        data.events.forEach(e => {
+          userEvents.innerHTML += `<li>${e}</li>`;
+        });
+      }
+    }
 
   } catch (err) {
     console.error("Ошибка загрузки профиля:", err);
+    if (profileName) profileName.textContent = "Ошибка загрузки";
   }
-=======
-document.getElementById("profileName").textContent = user.name;
-document.getElementById("profileRole").textContent = user.role;
-
-if (user.role === "student") {
-    document.getElementById("studentId").textContent = user.studentId;
-    document.getElementById("positionRow").classList.add("hidden");
-} else {
-    document.getElementById("userPosition").textContent = user.position;
-    document.getElementById("studentRow").classList.add("hidden");
-    document.getElementById("adminPanel").classList.remove("hidden");
-}
-
-user.events.forEach(e => {
-    document.getElementById("userEvents").innerHTML += `<li>${e}</li>`;
->>>>>>> 1cbf2af36c89a5683f6e9b7b65985ff62edb681f
 });

@@ -1,3 +1,4 @@
+// home.js
 document.addEventListener("DOMContentLoaded", () => {
     const pageTitle = document.getElementById("pageTitle");
     const navButtons = document.querySelectorAll(".nav-btn");
@@ -14,7 +15,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 .replace(/^[^\p{L}]+/gu, "")
                 .trim();
 
-            // обновляем заголовок
+            // специальная проверка для кнопки Мероприятия
+            if (чистыйТекст === "Мероприятия") {
+                window.location.href = "events.html";
+                return; // останавливаем выполнение, чтобы не менять заголовок
+            }
+
+            // обновляем заголовок для остальных кнопок
             pageTitle.textContent = чистыйТекст;
         });
     });

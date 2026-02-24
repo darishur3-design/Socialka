@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   auth,
   createUserWithEmailAndPassword,
@@ -7,7 +6,6 @@ import {
 
 import { updateProfile }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
 
 // ждём загрузки страницы
 document.addEventListener("DOMContentLoaded", () => {
@@ -22,11 +20,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const footerText = document.getElementById("footerText");
   const form = document.getElementById("authForm");
 
-  const emailInput = form.querySelector('input[type="email"]');
-  const passwordInput = form.querySelectorAll('input[type="password"]')[0];
+  const emailInput = document.getElementById("emailInput");
+  const passwordInput = document.getElementById("passwordInput");
 
   let isRegister = false;
-
 
   // ===== ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ =====
   switchBtn.addEventListener("click", (e) => {
@@ -37,40 +34,19 @@ document.addEventListener("DOMContentLoaded", () => {
     else showLogin();
   });
 
-  if (backBtn) backBtn.addEventListener("click", showLogin);
-
+  if (backBtn) backBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    showLogin();
+  });
 
   // ===== UI =====
-
   function showRegister() {
-=======
-const title = document.getElementById("authTitle");
-const switchBtn = document.getElementById("switchBtn");
-const submitBtn = document.getElementById("submitBtn");
-const repeatPassword = document.getElementById("repeatPassword");
-const backBtn = document.getElementById("backBtn");
-const footerText = document.getElementById("footerText");
-
-let isRegister = false;
-
-switchBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    showRegister();
-});
-
-backBtn.addEventListener("click", () => {
-    showLogin();
-});
-
-function showRegister() {
->>>>>>> 1cbf2af36c89a5683f6e9b7b65985ff62edb681f
     isRegister = true;
 
     title.textContent = "Регистрация";
     submitBtn.textContent = "Зарегистрироваться";
 
     repeatPassword.style.display = "block";
-<<<<<<< HEAD
     nameInput.style.display = "block";
 
     if (backBtn) backBtn.style.display = "flex";
@@ -80,22 +56,12 @@ function showRegister() {
   }
 
   function showLogin() {
-=======
-    backBtn.style.display = "flex";
-
-    footerText.textContent = "Уже есть аккаунт?";
-    switchBtn.textContent = "Войти";
-}
-
-function showLogin() {
->>>>>>> 1cbf2af36c89a5683f6e9b7b65985ff62edb681f
     isRegister = false;
 
     title.textContent = "Авторизация";
     submitBtn.textContent = "Войти";
 
     repeatPassword.style.display = "none";
-<<<<<<< HEAD
     nameInput.style.display = "none";
 
     if (backBtn) backBtn.style.display = "none";
@@ -103,7 +69,6 @@ function showLogin() {
     footerText.textContent = "Нет аккаунта?";
     switchBtn.textContent = "Регистрация";
   }
-
 
   // ===== ОТПРАВКА ФОРМЫ =====
   form.addEventListener("submit", async (e) => {
@@ -115,68 +80,64 @@ function showLogin() {
     const fullName = nameInput.value.trim();
 
     const parts = fullName.split(" ");
-
     const firstName = parts[0] || "";
     const lastName = parts.slice(1).join(" ") || "";
 
-
     try {
-
       // ================= REGISTRATION =================
-if (isRegister) {
+      if (isRegister) {
+        if (!fullName) {
+          alert("Введите имя");
+          return;
+        }
 
-  if (!name) {
-    alert("Введите имя");
-    return;
-  }
+        if (password !== repeat) {
+          alert("Пароли не совпадают");
+          return;
+        }
 
-  if (password !== repeat) {
-    alert("Пароли не совпадают");
-    return;
-  }
+        // регистрация в Firebase
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
 
-  // регистрация в Firebase
-  const userCredential = await createUserWithEmailAndPassword(
-    auth,
-    email,
-    password
-  );
+        await updateProfile(userCredential.user, {
+          displayName: fullName
+        });
 
-  await updateProfile(userCredential.user, {
-    displayName: name
-  });
+        // Firebase token
+        const token = await userCredential.user.getIdToken();
 
-  // Firebase token
-  const token = await userCredential.user.getIdToken();
+        // отправка в backend
+        const response = await fetch("http://localhost:8080/api/users/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            email: email,
+            firstName: firstName,
+            lastName: lastName
+          })
+        });
 
-  // отправка в backend
- const response = await fetch("http://localhost:8080/api/users/register", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`
-  },
-  body: JSON.stringify({
-    email: email,
-    firstName: name,
-    lastName: ""
-  })
-});
+        if (!response.ok) {
+          throw new Error("Ошибка регистрации в backend");
+        }
 
-if (!response.ok) {
-  throw new Error("Ошибка регистрации в backend");
-}
+        alert("Регистрация успешна");
+        window.location.href = "index.html";
 
-alert("Регистрация успешна");
-window.location.href = "profile.html";
-}
-
+      }
       // ================= LOGIN =================
       else {
         await signInWithEmailAndPassword(auth, email, password);
-
         alert("Вход выполнен");
         window.location.href = "profile.html";
+
       }
 
     } catch (error) {
@@ -184,12 +145,4 @@ window.location.href = "profile.html";
       console.error(error);
     }
   });
-
 });
-=======
-    backBtn.style.display = "none";
-
-    footerText.textContent = "Нет аккаунта?";
-    switchBtn.textContent = "Регистрация";
-}
->>>>>>> 1cbf2af36c89a5683f6e9b7b65985ff62edb681f

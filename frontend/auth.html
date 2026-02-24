@@ -1,117 +1,81 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<<<<<<< HEAD
-<meta charset="UTF-8">
-<title>Авторизация</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="css/auth.css">
-</head>
-
-<body>
-
-<a href="index.html" class="page-back-btn">←</a>
-
-<div class="auth-card">
-
-<div class="auth-logo">
-<img src="images/logo-nngasu.png">
-<span>Учет социальной активности студентов</span>
-</div>
-
-<h1 id="authTitle">Авторизация</h1>
-
-<form class="auth-form" id="authForm">
-
-<input id="emailInput" type="email" placeholder="Email" required>
-
-<input id="passwordInput" type="password" placeholder="Пароль" required>
-
-<input
-id="repeatPassword"
-type="password"
-placeholder="Повторите пароль"
-style="display:none"
-/>
-
-<input
-id="nameInput"
-type="text"
-placeholder="Имя Фамилия"
-style="display:none"
-/>
-
-<button type="submit" class="auth-submit" id="submitBtn">
-Войти
-</button>
-
-</form>
-
-<div class="auth-footer">
-<span id="footerText">Нет аккаунта?</span>
-<a href="#" id="switchBtn">Регистрация</a>
-</div>
-
-</div>
-
-<script type="module" src="js/auth.js"></script>
-=======
     <meta charset="UTF-8">
     <title>Авторизация</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <link rel="stylesheet" href="css/auth.css">
 </head>
 <body>
 
     <a href="index.html" class="page-back-btn">←</a>
 
-<div class="auth-card">
+    <div class="auth-card">
+        
+        <!-- КНОПКА НАЗАД (внутри карточки) -->
+        <button class="back-btn" id="backBtn">←</button>
 
-    <!-- BACK BUTTON -->
-    <button class="back-btn" id="backBtn">←</button>
+        <!-- ЛОГОТИП -->
+        <div class="auth-logo">
+            <img src="images/logo-nngasu.png" alt="ННГАСУ">
+            <span>Учет социальной активности студентов</span>
+        </div>
 
-    <!-- LOGO -->
-    <div class="auth-logo">
-        <img src="images/logo-nngasu.png" alt="ННГАСУ">
-        <span>Учет социальной активности студентов</span>
+        <!-- ЗАГОЛОВОК -->
+        <h1 id="authTitle">Авторизация</h1>
+
+        <!-- ФОРМА -->
+        <form class="auth-form" id="authForm">
+            
+            <!-- Email -->
+            <input 
+                type="email" 
+                id="emailInput"
+                placeholder="Email" 
+                required
+            >
+
+            <!-- Пароль -->
+            <input 
+                type="password" 
+                id="passwordInput"
+                placeholder="Пароль" 
+                required
+            >
+
+            <!-- Поле для повтора пароля (регистрация) -->
+            <input
+                type="password"
+                id="repeatPassword"
+                placeholder="Повторите пароль"
+                style="display:none"
+            >
+
+            <!-- Поле для имени (регистрация) -->
+            <input
+                type="text"
+                id="nameInput"
+                placeholder="Имя Фамилия"
+                style="display:none"
+            >
+
+            <!-- Кнопка отправки -->
+            <button type="submit" class="auth-submit" id="submitBtn">
+                Войти
+            </button>
+
+        </form>
+
+        <!-- ПОДВАЛ С ПЕРЕКЛЮЧЕНИЕМ РЕЖИМОВ -->
+        <div class="auth-footer">
+            <span id="footerText">Нет аккаунта?</span>
+            <a href="#" id="switchBtn">Регистрация</a>
+        </div>
+
     </div>
 
-    <!-- TITLE -->
-    <h1 id="authTitle">Авторизация</h1>
-
-    <!-- FORM -->
-    <form class="auth-form" id="authForm">
-
-        <input type="email" placeholder="Email" required>
-
-        <input type="password" placeholder="Пароль" required>
-
-        <!-- REGISTRATION FIELD -->
-        <input
-            type="password"
-            placeholder="Повторите пароль"
-            id="repeatPassword"
-            style="display: none;"
-        >
-
-        <button type="submit" class="auth-submit" id="submitBtn">
-            Войти
-        </button>
-
-    </form>
-
-    <!-- FOOTER -->
-    <div class="auth-footer">
-        <span id="footerText">Нет аккаунта?</span>
-        <a href="#" id="switchBtn">Регистрация</a>
-    </div>
-
-</div>
-
-<script src="js/auth.js"></script>
-
->>>>>>> 1cbf2af36c89a5683f6e9b7b65985ff62edb681f
+    <!-- СКРИПТЫ -->
+    <script type="module" src="js/auth.js"></script>
 
 </body>
 </html>

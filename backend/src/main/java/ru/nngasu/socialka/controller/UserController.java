@@ -7,6 +7,7 @@ import ru.nngasu.socialka.repository.UserRepository;
 import ru.nngasu.socialka.service.FirebaseService;
 
 import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -32,7 +33,6 @@ public class UserController {
         String cleanToken = token.replace("Bearer ", "");
         String uid = firebaseService.verifyToken(cleanToken);
 
-
         if (userRepository.findByAuthUid(uid).isPresent()) {
             return ResponseEntity.ok("exists");
         }
@@ -49,7 +49,7 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    //  ПОЛУЧЕНИЕ ПРОФИЛЯ ПО FIREBASE UID
+    // ПОЛУЧЕНИЕ ПРОФИЛЯ ПО FIREBASE UID
     @GetMapping("/{uid}")
     public ResponseEntity<?> getUser(@PathVariable String uid) {
 
@@ -61,25 +61,27 @@ public class UserController {
 
         return ResponseEntity.ok(user.get());
     }
-}
 
-@DeleteMapping("/delete/{uid}")
+    // УДАЛЕНИЕ ПОЛЬЗОВАТЕЛЯ ПО UID
+    @DeleteMapping("/delete/{uid}")
     public ResponseEntity<?> deleteUser(@PathVariable String uid) {
 
-    Optional<User> user = userRepository.findByAuthUid(uid);
+        Optional<User> user = userRepository.findByAuthUid(uid);
 
-    if (user.isEmpty()) {
-        return ResponseEntity.notFound().build();
+        if (user.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        userRepository.delete(user.get());
+
+        return ResponseEntity.ok("deleted");
     }
 
-    userRepository.delete(user.get());
-
-    return ResponseEntity.ok("deleted");
-}
-
-@PostMapping("/delete-by-uid")
+    // УДАЛЕНИЕ ПОЛЬЗОВАТЕЛЯ ПО AUTH_UID (альтернативный метод)
+    @PostMapping("/delete-by-uid")
     public ResponseEntity<?> deleteByUid(@RequestBody Map<String, String> body) {
-    String uid = body.get("authUid");
-    userRepository.deleteByAuthUid(uid);
-    return ResponseEntity.ok().build();
+        String uid = body.get("authUid");
+        userRepository.deleteByAuthUid(uid);
+        return ResponseEntity.ok().build();
+    }
 }

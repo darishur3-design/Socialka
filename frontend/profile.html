@@ -1,143 +1,163 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<<<<<<< HEAD
-<meta charset="UTF-8">
-<title>Профиль</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <title>Профиль</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-
 <body>
 
 <!-- ===== HEADER ===== -->
 <header class="header">
+    <div class="header-left">
+        <a href="index.html">
+            <img src="images/logo-nngasu.png" alt="ННГАСУ">
+        </a>
+    </div>
 
-  <div class="header-left">
-    <a href="index.html">
-      <img src="images/logo-nngasu.png">
-    </a>
-  </div>
+    <div class="header-title">
+        Профиль
+    </div>
 
-  <div class="header-title">
-    Профиль
-  </div>
-
-  <div class="header-right">
+    <div class="header-right">
 
     <!-- кнопка входа -->
     <a href="auth.html" class="auth-btn" id="loginBtn">
-      Авторизация
+        <i class="fas fa-sign-in-alt"></i> Войти
     </a>
 
+    <!-- кнопка выхода -->
+    <button id="logoutBtn" class="auth-btn hidden">
+        <i class="fas fa-sign-out-alt"></i> Выйти
+    </button>
+
     <!-- блок пользователя -->
-    <div id="userBlock" style="display:none;">
-      <img src="images/avatar.png" class="avatar-small">
-      <span id="userName"></span>
+    <div id="userBlock" class="user-block hidden">
+        <img src="images/avatar.png" class="avatar-small" id="userAvatar">
+        <span id="userName" class="user-name"></span>
     </div>
-
-  </div>
-
-</header>
-
-
-<!-- ===== LAYOUT ===== -->
-<div class="layout">
-
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <button class="nav-btn" onclick="location.href='index.html'">🏠 Главная</button>
-    <button class="nav-btn">📅 Мероприятия</button>
-    <button class="nav-btn">🏆 Рейтинг</button>
-    <button class="nav-btn">👥 Сообщества</button>
-    <button class="nav-btn active">👤 Профиль</button>
-  </aside>
-
-
-  <!-- CONTENT -->
-  <main class="content">
-
-    <div class="profile" id="profileContainer" style="display:none;">
-
-      <!-- logout -->
-      <button id="logoutBtn" class="logout-btn">Выйти</button>
-
-      <!-- единственный аватар -->
-      <img src="images/avatar.png" class="avatar">
-
-      <!-- данные пользователя -->
-      <div class="profile-info">
-
-        <h2 id="profileName">Загрузка...</h2>
-
-        <p class="profile-email" id="profileEmail">
-          email@example.com
-        </p>
-
-        <p>
-          Роль:
-          <strong id="profileRole">Загрузка...</strong>
-        </p>
-
-      </div>
-
-    </div>
-
-    <!-- если не авторизован -->
-    <div id="notAuth" style="display:none;">
-      <h2>Вы не авторизованы</h2>
-      <a href="auth.html">Войти</a>
-    </div>
-
-  </main>
 
 </div>
 
+</header>
 
-<!-- Firebase auth -->
-<script type="module" src="js/auth-state.js"></script>
-
-<!-- загрузка профиля -->
-<script type="module" src="js/profile.js"></script>
-
-<!-- logout -->
-<script type="module">
-import { auth, signOut } from "./js/firebase.js";
-
-document.getElementById("logoutBtn").onclick = async () => {
-  await signOut(auth);
-  window.location.href = "auth.html";
-};
-</script>
-
-=======
-    <meta charset="UTF-8">
-    <title>Профиль</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-
-<div class="app">
-
+<!-- ===== LAYOUT ===== -->
+<div class="layout">
+    <!-- SIDEBAR С КНОПКАМИ (как было) -->
     <aside class="sidebar">
-        <h2 class="logo">SOCIAL</h2>
-        <nav>
-            <a href="index.html">Главная</a>
-            <a href="organizations.html">Организации</a>
-            <a class="active">Профиль</a>
-        </nav>
+        <button class="nav-btn" onclick="location.href='index.html'">
+            <i class="fas fa-home"></i> Главная
+        </button>
+        <button class="nav-btn">
+            <i class="fas fa-calendar-alt"></i> Мероприятия
+        </button>
+        <button class="nav-btn">
+            <i class="fas fa-trophy"></i> Рейтинг
+        </button>
+        <button class="nav-btn">
+            <i class="fas fa-users"></i> Сообщества
+        </button>
+        <button class="nav-btn active">
+            <i class="fas fa-user"></i> Профиль
+        </button>
     </aside>
 
+    <!-- CONTENT -->
     <main class="content">
-        <div class="profile">
-            <img src="images/avatar.png" class="avatar">
-            <h2>Иван Иванов</h2>
-            <p>Часы: <strong>120</strong></p>
-            <button>Редактировать</button>
+        <!-- Профиль авторизованного пользователя -->
+        <div class="profile-container" id="profileContainer" style="display: none;">
+            <!-- Шапка профиля -->
+            <div class="profile-header-compact">
+                <div class="profile-avatar-wrapper">
+                    <img src="images/avatar.png" class="profile-avatar" id="profileAvatar">
+                </div>
+                <div class="profile-title-compact">
+                    <h1 id="profileName">Загрузка...</h1>
+                    <p class="profile-email" id="profileEmail">email@example.com</p>
+                </div>
+                
+            </div>
+
+            <!-- Статистика -->
+            <div class="profile-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="statHours">0</div>
+                    <div class="stat-label">Часов</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statEvents">0</div>
+                    <div class="stat-label">Мероприятий</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statRating">0</div>
+                    <div class="stat-label">Рейтинг</div>
+                </div>
+            </div>
+
+            <!-- Информация о пользователе -->
+            <div class="profile-info">
+                <div class="info-row">
+                    <span class="info-label">Роль:</span>
+                    <span class="info-value" id="profileRole">
+                        <span class="role-badge">Базовый пользователь</span>
+                    </span>
+                </div>
+                <div class="info-row" id="studentRow" style="display: none;">
+                    <span class="info-label">Студенческий ID:</span>
+                    <span class="info-value" id="studentId">—</span>
+                </div>
+                <div class="info-row" id="positionRow">
+                    <span class="info-label">Должность:</span>
+                    <span class="info-value" id="userPosition">—</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Группа:</span>
+                    <span class="info-value" id="userGroup">—</span>
+                </div>
+            </div>
+
+            <!-- Мои мероприятия -->
+            <div class="events-section">
+                <h3><i class="fas fa-calendar-check"></i> Мои мероприятия</h3>
+                <div class="events-list" id="userEvents">
+                    <div class="event-item placeholder">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Нет запланированных мероприятий</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Панель администратора -->
+            <div class="admin-panel" id="adminPanel" style="display: none;">
+                <h3><i class="fas fa-crown"></i> Панель администратора</h3>
+                <div class="admin-buttons">
+                    <button class="admin-btn">
+                        <i class="fas fa-users-cog"></i> Управление пользователями
+                    </button>
+                    <button class="admin-btn">
+                        <i class="fas fa-calendar-plus"></i> Создать мероприятие
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Не авторизован -->
+        <div class="not-auth" id="notAuth" style="display: none;">
+            <div class="not-auth-content">
+                <i class="fas fa-user-lock"></i>
+                <h2>Вы не авторизованы</h2>
+                <p>Войдите, чтобы просматривать профиль</p>
+                <a href="auth.html" class="auth-btn-large">Войти</a>
+            </div>
         </div>
     </main>
 </div>
 
->>>>>>> 1cbf2af36c89a5683f6e9b7b65985ff62edb681f
+<!-- Скрипты -->
+<script type="module" src="js/auth-state.js"></script>
+<script type="module" src="js/profile.js"></script>
+
 </body>
 </html>

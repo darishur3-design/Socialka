@@ -1,5 +1,0 @@
-backend/target/
-backend/src/main/resources/firebase-key.json
-backend/src/main/resources/firebase-service-account.json
-*.log
-node_modules/

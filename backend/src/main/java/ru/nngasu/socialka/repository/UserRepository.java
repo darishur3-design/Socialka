@@ -7,5 +7,5 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByAuthUid(String authUid);
+    void deleteByAuthUid(String authUid);
 }
-void deleteByAuthUid(String authUid);
