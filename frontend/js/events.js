@@ -25,11 +25,6 @@ function formatDate(date) {
     return `${day}-${month}-${year}`;
 }
 
-function parseDate(dateStr) {
-    const [day, month, year] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day);
-}
-
 function renderCalendar() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -66,9 +61,16 @@ function renderCalendar() {
 // Загрузка данных из БД
 async function loadData() {
     try {
-        // Загрузка мероприятий с паспортами
-        const eventsResponse = await fetch('http://localhost:8080/api/events_passports');
+        // Загрузка мероприятий
+        console.log('Загрузка мероприятий...');
+        const eventsResponse = await fetch('http://localhost:8080/api/events');
+        
+        if (!eventsResponse.ok) {
+            throw new Error(`HTTP error! status: ${eventsResponse.status}`);
+        }
+        
         eventsData = await eventsResponse.json();
+        console.log('Загружены мероприятия:', eventsData);
         
         // Загрузка сообществ
         const communitiesResponse = await fetch('http://localhost:8080/api/communities');
@@ -78,16 +80,6 @@ async function loadData() {
         const formatsResponse = await fetch('http://localhost:8080/api/formats');
         formatsData = await formatsResponse.json();
         
-        // Преобразуем даты из БД (в БД они в формате YYYY-MM-DD)
-        eventsData = eventsData.map(event => ({
-            ...event,
-            date: formatDate(new Date(event.date)),
-            // Получаем название формата по ID
-            format: formatsData.find(f => f.id === event.format_id)?.name || 'Неизвестно',
-            // Получаем название сообщества по ID
-            community: communitiesData.find(c => c.id === event.community_id)?.name || 'Неизвестно'
-        }));
-        
         // Загружаем данные в фильтры
         loadFiltersData();
         renderEvents();
@@ -96,7 +88,11 @@ async function loadData() {
         console.error('Ошибка загрузки данных:', error);
         document.getElementById('eventsGrid').innerHTML = `
             <div style="text-align: center; padding: 50px; color: #ff4444;">
-                <i class="fas fa-exclamation-circle"></i> Ошибка загрузки данных
+                <i class="fas fa-exclamation-circle"></i> Ошибка загрузки данных: ${error.message}
+                <br><br>
+                <button onclick="location.reload()" class="auth-btn" style="padding: 10px 20px;">
+                    Повторить
+                </button>
             </div>
         `;
     }
@@ -106,45 +102,58 @@ async function loadData() {
 function loadFiltersData() {
     // Загрузка сообществ
     const communityDropdown = document.getElementById('communityDropdown');
-    let communityHtml = '<div class="dropdown-item" data-community="all">Все сообщества</div>';
-    communitiesData.forEach(community => {
-        communityHtml += `<div class="dropdown-item" data-community="${community.name}">${community.name}</div>`;
-    });
-    communityDropdown.innerHTML = communityHtml;
+    if (communityDropdown) {
+        let communityHtml = '<div class="dropdown-item" data-community="all">Все сообщества</div>';
+        communitiesData.forEach(community => {
+            communityHtml += `<div class="dropdown-item" data-community="${community.name}">${community.name}</div>`;
+        });
+        communityDropdown.innerHTML = communityHtml;
+    }
     
     // Загрузка форматов
     const formatDropdown = document.getElementById('formatDropdown');
-    let formatHtml = '<div class="dropdown-item" data-format="all">Все форматы</div>';
-    formatsData.forEach(format => {
-        formatHtml += `<div class="dropdown-item" data-format="${format.name}">${format.name}</div>`;
-    });
-    formatDropdown.innerHTML = formatHtml;
+    if (formatDropdown) {
+        let formatHtml = '<div class="dropdown-item" data-format="all">Все форматы</div>';
+        formatsData.forEach(format => {
+            formatHtml += `<div class="dropdown-item" data-format="${format.name}">${format.name}</div>`;
+        });
+        formatDropdown.innerHTML = formatHtml;
+    }
     
     // Загрузка мест (уникальные значения из мероприятий)
-    const locations = [...new Set(eventsData.map(e => e.place))];
+    const locations = [...new Set(eventsData.map(e => e.location).filter(Boolean))];
     const locationDropdown = document.getElementById('locationDropdown');
-    let locationHtml = '<div class="dropdown-item" data-location="all">Все места</div>';
-    locations.forEach(location => {
-        locationHtml += `<div class="dropdown-item" data-location="${location}">${location}</div>`;
-    });
-    locationDropdown.innerHTML = locationHtml;
+    if (locationDropdown) {
+        let locationHtml = '<div class="dropdown-item" data-location="all">Все места</div>';
+        locations.forEach(location => {
+            locationHtml += `<div class="dropdown-item" data-location="${location}">${location}</div>`;
+        });
+        locationDropdown.innerHTML = locationHtml;
+    }
 }
 
 // Фильтрация мероприятий
 function filterEvents() {
     return eventsData.filter(event => {
+        // Фильтр по дате
         if (filters.date && event.date !== filters.date) return false;
         
+        // Фильтр по времени
         if (filters.time !== 'all') {
-            const hour = parseInt(event.time.split(':')[0]);
+            const hour = parseInt(event.time?.split(':')[0] || '0');
             if (filters.time === 'morning' && hour >= 12) return false;
             if (filters.time === 'day' && (hour < 12 || hour >= 18)) return false;
             if (filters.time === 'evening' && hour < 18) return false;
         }
         
+        // Фильтр по сообществу
         if (filters.community !== 'all' && event.community !== filters.community) return false;
+        
+        // Фильтр по формату
         if (filters.format !== 'all' && event.format !== filters.format) return false;
-        if (filters.location !== 'all' && event.place !== filters.location) return false;
+        
+        // Фильтр по месту
+        if (filters.location !== 'all' && event.location !== filters.location) return false;
         
         return true;
     });
@@ -153,6 +162,8 @@ function filterEvents() {
 // Обновление активных фильтров
 function updateActiveFilters() {
     const container = document.getElementById('activeFilters');
+    if (!container) return;
+    
     container.innerHTML = '';
     
     if (filters.date) {
@@ -218,6 +229,8 @@ window.removeFilter = function(filter) {
 // Рендер мероприятий
 function renderEvents() {
     const grid = document.getElementById('eventsGrid');
+    if (!grid) return;
+    
     const filtered = filterEvents();
     
     if (filtered.length === 0) {
@@ -236,9 +249,9 @@ function renderEvents() {
         
         card.innerHTML = `
             <div class="event-info">
-                <h3>${event.name}</h3>
+                <h3>${event.title}</h3>
                 <div class="event-organizers">
-                    <i class="fas fa-users"></i> организаторы: ${event.organizers || 'Не указаны'}
+                    <i class="fas fa-users"></i> организаторы: ${event.community || 'Не указаны'}
                 </div>
                 <div class="event-date">
                     <i class="far fa-calendar-alt"></i>
@@ -254,21 +267,12 @@ function renderEvents() {
             </div>
         `;
         
-        card.addEventListener('click', () => openEventModal(event));
+        card.addEventListener('click', () => {
+            window.location.href = `event.html?id=${event.id}`;
+        });
+        
         grid.appendChild(card);
     });
-}
-
-function openEventModal(event) {
-    document.getElementById('modalTitle').textContent = event.name;
-    document.getElementById('modalOrganizers').innerHTML = `<i class="fas fa-users"></i> организаторы: ${event.organizers || 'Не указаны'}`;
-    document.getElementById('modalDate').textContent = event.date;
-    document.getElementById('modalTime').textContent = event.time || '00:00';
-    document.getElementById('modalFormat').textContent = event.format;
-    document.getElementById('modalLocation').textContent = event.place;
-    document.getElementById('modalDescription').textContent = event.description;
-    
-    document.getElementById('eventModal').classList.add('active');
 }
 
 // Закрытие всех дропдаунов
@@ -283,5 +287,171 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCalendar();
     loadData();
     
-    // ... (остальные обработчики событий такие же, как в вашем коде)
+    // Дата фильтр
+    const dateFilter = document.getElementById('dateFilter');
+    const dateDropdown = document.getElementById('dateDropdown');
+    
+    if (dateFilter && dateDropdown) {
+        dateFilter.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeAllDropdowns();
+            dateDropdown.classList.toggle('show');
+        });
+    }
+    
+    const prevMonth = document.getElementById('prevMonth');
+    if (prevMonth) {
+        prevMonth.addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+    }
+    
+    const nextMonth = document.getElementById('nextMonth');
+    if (nextMonth) {
+        nextMonth.addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+    }
+    
+    const calendarDays = document.getElementById('calendarDays');
+    if (calendarDays) {
+        calendarDays.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const day = e.target.closest('.calendar-day[data-date]');
+            if (day) {
+                document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+                day.classList.add('selected');
+                selectedDate = day.dataset.date;
+            }
+        });
+    }
+    
+    const applyDate = document.getElementById('applyDate');
+    if (applyDate) {
+        applyDate.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (selectedDate) {
+                filters.date = selectedDate;
+                dateDropdown.classList.remove('show');
+                renderEvents();
+                updateActiveFilters();
+            }
+        });
+    }
+    
+    const clearDate = document.getElementById('clearDate');
+    if (clearDate) {
+        clearDate.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectedDate = null;
+            filters.date = null;
+            document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+            dateDropdown.classList.remove('show');
+            renderEvents();
+            updateActiveFilters();
+        });
+    }
+    
+    // Время фильтр
+    const timeFilter = document.getElementById('timeFilter');
+    const timeDropdown = document.getElementById('timeDropdown');
+    
+    if (timeFilter && timeDropdown) {
+        timeFilter.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeAllDropdowns();
+            timeDropdown.classList.toggle('show');
+        });
+        
+        timeDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const item = e.target.closest('.dropdown-item');
+            if (item) {
+                filters.time = item.dataset.time;
+                timeDropdown.classList.remove('show');
+                renderEvents();
+                updateActiveFilters();
+            }
+        });
+    }
+    
+    // Сообщество фильтр
+    const communityFilter = document.getElementById('communityFilter');
+    const communityDropdown = document.getElementById('communityDropdown');
+    
+    if (communityFilter && communityDropdown) {
+        communityFilter.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeAllDropdowns();
+            communityDropdown.classList.toggle('show');
+        });
+        
+        communityDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const item = e.target.closest('.dropdown-item');
+            if (item) {
+                filters.community = item.dataset.community;
+                communityDropdown.classList.remove('show');
+                renderEvents();
+                updateActiveFilters();
+            }
+        });
+    }
+    
+    // Формат фильтр
+    const formatFilter = document.getElementById('formatFilter');
+    const formatDropdown = document.getElementById('formatDropdown');
+    
+    if (formatFilter && formatDropdown) {
+        formatFilter.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeAllDropdowns();
+            formatDropdown.classList.toggle('show');
+        });
+        
+        formatDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const item = e.target.closest('.dropdown-item');
+            if (item) {
+                filters.format = item.dataset.format;
+                formatDropdown.classList.remove('show');
+                renderEvents();
+                updateActiveFilters();
+            }
+        });
+    }
+    
+    // Место фильтр
+    const locationFilter = document.getElementById('locationFilter');
+    const locationDropdown = document.getElementById('locationDropdown');
+    
+    if (locationFilter && locationDropdown) {
+        locationFilter.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeAllDropdowns();
+            locationDropdown.classList.toggle('show');
+        });
+        
+        locationDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const item = e.target.closest('.dropdown-item');
+            if (item) {
+                filters.location = item.dataset.location;
+                locationDropdown.classList.remove('show');
+                renderEvents();
+                updateActiveFilters();
+            }
+        });
+    }
+    
+    // Закрытие дропдаунов при клике вне
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.filter-item')) {
+            closeAllDropdowns();
+        }
+    });
 });

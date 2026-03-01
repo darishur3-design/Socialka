@@ -7,24 +7,27 @@ let joinedCommunities = new Set();
 // Загрузка сообществ из БД
 async function loadCommunities() {
     try {
-        // Запрос к бэкенду для получения сообществ
+        console.log('Загрузка сообществ...');
         const response = await fetch('http://localhost:8080/api/communities');
-        communitiesData = await response.json();
         
-        // Данные уже содержат membersCount и eventsCount из SQL запроса!
-        // Просто добавляем иконки
-        communitiesData = communitiesData.map(community => ({
-            ...community,
-            iconClass: getIconClass(community.thematics),
-            icon: getIconName(community.thematics)
-        }));
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        communitiesData = await response.json();
+        console.log('Загружены сообщества:', communitiesData);
         
         renderCommunities();
+        
     } catch (error) {
         console.error('Ошибка загрузки сообществ:', error);
         document.getElementById('communitiesGrid').innerHTML = `
             <div style="text-align: center; padding: 50px; color: #ff4444;">
-                <i class="fas fa-exclamation-circle"></i> Ошибка загрузки данных
+                <i class="fas fa-exclamation-circle"></i> Ошибка загрузки данных: ${error.message}
+                <br><br>
+                <button onclick="location.reload()" class="auth-btn" style="padding: 10px 20px;">
+                    Повторить
+                </button>
             </div>
         `;
     }
@@ -74,11 +77,11 @@ function renderCommunities() {
         card.dataset.id = community.id;
         
         card.innerHTML = `
-            <div class="community-icon ${community.iconClass}">
-                <i class="${community.icon}"></i>
+            <div class="community-icon ${community.iconClass || getIconClass(community.thematics)}">
+                <i class="${community.iconName || getIconName(community.thematics)}"></i>
             </div>
             <h3 class="community-name">${community.name}</h3>
-            <p class="community-theme">${community.thematics}</p>
+            <p class="community-theme">${community.thematics || 'Без тематики'}</p>
             <div class="community-footer">
                 <div class="community-stats">
                     <span class="stat"><i class="fas fa-users"></i> ${community.membersCount || 0}</span>
@@ -90,10 +93,9 @@ function renderCommunities() {
             </div>
         `;
         
-        // Открытие модального окна при клике на карточку
         card.addEventListener('click', (e) => {
             if (!e.target.classList.contains('join-btn')) {
-                openCommunityModal(community);
+                window.location.href = `community.html?id=${community.id}`;
             }
         });
         
@@ -107,30 +109,42 @@ function renderCommunities() {
             const id = parseInt(btn.dataset.id);
             const community = communitiesData.find(c => c.id === id);
             
+            // Проверяем авторизацию
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Необходимо авторизоваться');
+                window.location.href = 'auth.html';
+                return;
+            }
+            
             if (joinedCommunities.has(id)) {
                 // Выход из сообщества
                 try {
-                    await fetch(`http://localhost:8080/api/members_communities/${id}`, {
+                    const response = await fetch(`http://localhost:8080/api/members_communities/${id}`, {
                         method: 'DELETE',
                         headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            'Authorization': `Bearer ${token}`
                         }
                     });
-                    joinedCommunities.delete(id);
-                    btn.textContent = 'Вступить';
-                    btn.classList.remove('joined');
-                    alert(`Вы покинули сообщество "${community.name}"`);
+                    
+                    if (response.ok) {
+                        joinedCommunities.delete(id);
+                        btn.textContent = 'Вступить';
+                        btn.classList.remove('joined');
+                        alert(`Вы покинули сообщество "${community.name}"`);
+                    }
                 } catch (error) {
                     console.error('Ошибка при выходе из сообщества:', error);
+                    alert('Ошибка при выходе из сообщества');
                 }
             } else {
                 // Вступление в сообщество
                 try {
-                    await fetch('http://localhost:8080/api/members_communities', {
+                    const response = await fetch('http://localhost:8080/api/members_communities', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify({
                             community_id: id,
@@ -138,100 +152,40 @@ function renderCommunities() {
                             role_id: 1 // Обычный участник
                         })
                     });
-                    joinedCommunities.add(id);
-                    btn.textContent = 'Вы вступили';
-                    btn.classList.add('joined');
-                    alert(`Вы вступили в сообщество "${community.name}"`);
+                    
+                    if (response.ok) {
+                        joinedCommunities.add(id);
+                        btn.textContent = 'Вы вступили';
+                        btn.classList.add('joined');
+                        alert(`Вы вступили в сообщество "${community.name}"`);
+                    }
                 } catch (error) {
                     console.error('Ошибка при вступлении в сообщество:', error);
+                    alert('Ошибка при вступлении в сообщество');
                 }
             }
         });
     });
 }
 
-// Открытие модального окна с деталями сообщества
-function openCommunityModal(community) {
-    // Устанавливаем иконку
-    const modalIcon = document.getElementById('modalIcon');
-    modalIcon.className = `modal-icon ${community.iconClass}`;
-    modalIcon.innerHTML = `<i class="${community.icon}"></i>`;
-    
-    document.getElementById('modalName').textContent = community.name;
-    document.getElementById('modalTheme').textContent = community.thematics;
-    document.getElementById('modalMembers').textContent = community.membersCount || 0;
-    document.getElementById('modalEvents').textContent = community.eventsCount || 0;
-    document.getElementById('modalDescription').textContent = community.description;
-    
-    // Настраиваем кнопку в модальном окне
-    const joinBtn = document.getElementById('joinFromModal');
-    const isJoined = joinedCommunities.has(community.id);
-    joinBtn.textContent = isJoined ? 'Вы вступили' : 'Вступить';
-    
-    joinBtn.onclick = async () => {
-        if (joinedCommunities.has(community.id)) {
-            // Выход из сообщества
-            try {
-                await fetch(`http://localhost:8080/api/members_communities/${community.id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-                joinedCommunities.delete(community.id);
-                joinBtn.textContent = 'Вступить';
-                alert(`Вы покинули сообщество "${community.name}"`);
-            } catch (error) {
-                console.error('Ошибка при выходе из сообщества:', error);
-            }
-        } else {
-            // Вступление в сообщество
-            try {
-                await fetch('http://localhost:8080/api/members_communities', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify({
-                        community_id: community.id,
-                        date_joining: new Date().toISOString().split('T')[0],
-                        role_id: 1
-                    })
-                });
-                joinedCommunities.add(community.id);
-                joinBtn.textContent = 'Вы вступили';
-                alert(`Вы вступили в сообщество "${community.name}"`);
-            } catch (error) {
-                console.error('Ошибка при вступлении в сообщество:', error);
-            }
-        }
-        // Обновляем кнопку на карточке
-        renderCommunities();
-    };
-    
-    document.getElementById('communityModal').classList.add('active');
-}
-
 // Загрузка состояния вступления пользователя
 async function loadUserMemberships() {
     try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
         const response = await fetch('http://localhost:8080/api/members_communities/user', {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${token}`
             }
         });
         
         if (response.ok) {
             const memberships = await response.json();
             joinedCommunities = new Set(memberships.map(m => m.community_id));
-        } else {
-            // Если пользователь не авторизован или нет членств
-            joinedCommunities = new Set();
         }
     } catch (error) {
         console.error('Ошибка загрузки членства:', error);
-        joinedCommunities = new Set();
     }
 }
 
@@ -239,22 +193,4 @@ async function loadUserMemberships() {
 document.addEventListener('DOMContentLoaded', async () => {
     await loadCommunities();
     await loadUserMemberships();
-    
-    // Модальное окно
-    const modal = document.getElementById('communityModal');
-    const closeBtn = document.getElementById('closeModal');
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    
-    function closeModal() {
-        modal.classList.remove('active');
-    }
-    
-    closeBtn.addEventListener('click', closeModal);
-    closeModalBtn.addEventListener('click', closeModal);
-    
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeModal();
-        }
-    });
 });

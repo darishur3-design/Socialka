@@ -4,10 +4,12 @@ import org.springframework.stereotype.Service;
 import ru.nngasu.socialka.model.Community;
 import ru.nngasu.socialka.repository.CommunityRepository;
 import ru.nngasu.socialka.repository.MemberCommunityRepository;
+import ru.nngasu.socialka.repository.EventRepository;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -15,12 +17,14 @@ public class CommunityService {
 
     private final CommunityRepository communityRepository;
     private final MemberCommunityRepository memberRepository;
+    private final EventRepository eventRepository;
 
-    // ДОБАВЬ ЭТОТ КОНСТРУКТОР
     public CommunityService(CommunityRepository communityRepository,
-                            MemberCommunityRepository memberRepository) {
+                            MemberCommunityRepository memberRepository,
+                            EventRepository eventRepository) {
         this.communityRepository = communityRepository;
         this.memberRepository = memberRepository;
+        this.eventRepository = eventRepository;
     }
 
     public List<Map<String, Object>> getAllCommunities() {
@@ -38,10 +42,8 @@ public class CommunityService {
             map.put("description", c.getDescription());
             map.put("logo", c.getLogo());
             map.put("creationYear", c.getCreationYear());
-            map.put("membersCount", membersCount);
-            map.put("eventsCount", eventsCount);
-
-            // Определяем иконку по тематике
+            map.put("membersCount", membersCount != null ? membersCount : 0);
+            map.put("eventsCount", eventsCount != null ? eventsCount : 0);
             map.put("iconClass", getIconClass(c.getThematics()));
             map.put("iconName", getIconName(c.getThematics()));
 
@@ -50,8 +52,32 @@ public class CommunityService {
     }
 
     public Map<String, Object> getCommunityById(Integer id) {
-        // TODO: реализовать получение одного сообщества
-        return null;
+        Optional<Community> optional = communityRepository.findById(id);
+        if (optional.isEmpty()) {
+            return null;
+        }
+
+        Community c = optional.get();
+
+        // Подсчет участников
+        long membersCount = memberRepository.findByCommunityId(c.getId()).size();
+
+        // Подсчет мероприятий
+        long eventsCount = eventRepository.countByCommunityId(c.getId());
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", c.getId());
+        map.put("name", c.getName());
+        map.put("thematics", c.getThematics());
+        map.put("description", c.getDescription());
+        map.put("logo", c.getLogo());
+        map.put("creationYear", c.getCreationYear());
+        map.put("membersCount", membersCount);
+        map.put("eventsCount", eventsCount);
+        map.put("iconClass", getIconClass(c.getThematics()));
+        map.put("iconName", getIconName(c.getThematics()));
+
+        return map;
     }
 
     private String getIconClass(String thematics) {

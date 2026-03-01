@@ -6,6 +6,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Дополнительные стили для новых секций */
+        .communities-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .community-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #333;
+            text-decoration: none;
+        }
+        
+        .community-link:hover {
+            background: #e8f0fe;
+            transform: translateX(5px);
+            color: #4f8df5;
+        }
+        
+        .community-link i {
+            color: #4f8df5;
+            font-size: 16px;
+        }
+        
+        .event-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #333;
+            text-decoration: none;
+        }
+        
+        .event-link:hover {
+            background: #e8f0fe;
+            transform: translateX(5px);
+            color: #4f8df5;
+        }
+        
+        .event-link i {
+            color: #4f8df5;
+            font-size: 16px;
+        }
+        
+        .info-row.hidden {
+            display: none;
+        }
+        
+        .profile-header-compact {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .profile-title-compact h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+    </style>
 </head>
 <body>
 
@@ -22,44 +99,41 @@
     </div>
 
     <div class="header-right">
+        <!-- кнопка входа -->
+        <a href="auth.html" class="auth-btn" id="loginBtn">
+            <i class="fas fa-sign-in-alt"></i> Войти
+        </a>
 
-    <!-- кнопка входа -->
-    <a href="auth.html" class="auth-btn" id="loginBtn">
-        <i class="fas fa-sign-in-alt"></i> Войти
-    </a>
+        <!-- кнопка выхода -->
+        <button id="logoutBtn" class="auth-btn hidden">
+            <i class="fas fa-sign-out-alt"></i> Выйти
+        </button>
 
-    <!-- кнопка выхода -->
-    <button id="logoutBtn" class="auth-btn hidden">
-        <i class="fas fa-sign-out-alt"></i> Выйти
-    </button>
-
-    <!-- блок пользователя -->
-    <div id="userBlock" class="user-block hidden">
-        <img src="images/avatar.png" class="avatar-small" id="userAvatar">
-        <span id="userName" class="user-name"></span>
+        <!-- блок пользователя -->
+        <div id="userBlock" class="user-block hidden">
+            <img src="images/avatar.png" class="avatar-small" id="userAvatar">
+            <span id="userName" class="user-name"></span>
+        </div>
     </div>
-
-</div>
-
 </header>
 
 <!-- ===== LAYOUT ===== -->
 <div class="layout">
-    <!-- SIDEBAR С КНОПКАМИ (как было) -->
+    <!-- SIDEBAR С КНОПКАМИ -->
     <aside class="sidebar">
         <button class="nav-btn" onclick="location.href='index.html'">
             <i class="fas fa-home"></i> Главная
         </button>
-        <button class="nav-btn">
+        <button class="nav-btn" onclick="location.href='events.html'">
             <i class="fas fa-calendar-alt"></i> Мероприятия
         </button>
-        <button class="nav-btn">
+        <button class="nav-btn" onclick="location.href='rating.html'">
             <i class="fas fa-trophy"></i> Рейтинг
         </button>
-        <button class="nav-btn">
+        <button class="nav-btn" onclick="location.href='organizations.html'">
             <i class="fas fa-users"></i> Сообщества
         </button>
-        <button class="nav-btn active">
+        <button class="nav-btn active" onclick="location.href='profile.html'">
             <i class="fas fa-user"></i> Профиль
         </button>
     </aside>
@@ -77,14 +151,13 @@
                     <h1 id="profileName">Загрузка...</h1>
                     <p class="profile-email" id="profileEmail">email@example.com</p>
                 </div>
-                
             </div>
 
-            <!-- Статистика -->
+            <!-- Статистика (часы и рейтинг оставлены как идеи для масштабирования) -->
             <div class="profile-stats">
                 <div class="stat-card">
                     <div class="stat-value" id="statHours">0</div>
-                    <div class="stat-label">Часов</div>
+                    <div class="stat-label">Часов *</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statEvents">0</div>
@@ -92,12 +165,14 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statRating">0</div>
-                    <div class="stat-label">Рейтинг</div>
+                    <div class="stat-label">Рейтинг *</div>
                 </div>
             </div>
+            <p style="font-size: 12px; color: #999; text-align: center; margin-top: -15px;">* функционал в разработке</p>
 
             <!-- Информация о пользователе -->
             <div class="profile-info">
+                <h3><i class="fas fa-id-card"></i> Основная информация</h3>
                 <div class="info-row">
                     <span class="info-label">Роль:</span>
                     <span class="info-value" id="profileRole">
@@ -112,13 +187,35 @@
                     <span class="info-label">Должность:</span>
                     <span class="info-value" id="userPosition">—</span>
                 </div>
-                <div class="info-row">
-                    <span class="info-label">Группа:</span>
+                
+                <!-- НОВЫЕ ПОЛЯ -->
+                <div class="info-row" id="groupRow">
+                    <span class="info-label">Группа/курс:</span>
                     <span class="info-value" id="userGroup">—</span>
+                </div>
+                
+                <div class="info-row" id="birthdateRow">
+                    <span class="info-label">Дата рождения:</span>
+                    <span class="info-value" id="userBirthdate">—</span>
+                </div>
+                <div class="info-row" id="ageRow" style="display: none;">
+                    <span class="info-label">Возраст:</span>
+                    <span class="info-value" id="userAge">—</span>
                 </div>
             </div>
 
-            <!-- Мои мероприятия -->
+            <!-- Мои сообщества -->
+            <div class="events-section">
+                <h3><i class="fas fa-users"></i> Мои сообщества</h3>
+                <div class="communities-list" id="myCommunities">
+                    <div class="event-item placeholder">
+                        <i class="fas fa-users"></i>
+                        <span>Нет сообществ</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Мои мероприятия (участник) -->
             <div class="events-section">
                 <h3><i class="fas fa-calendar-check"></i> Мои мероприятия</h3>
                 <div class="events-list" id="userEvents">
@@ -129,7 +226,18 @@
                 </div>
             </div>
 
-            <!-- Панель администратора -->
+            <!-- Мои мероприятия (организатор) - НОВОЕ -->
+            <div class="events-section">
+                <h3><i class="fas fa-user-tie"></i> Мои мероприятия (организатор)</h3>
+                <div class="events-list" id="organizerEvents">
+                    <div class="event-item placeholder">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Нет мероприятий</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Панель администратора (только для админов) -->
             <div class="admin-panel" id="adminPanel" style="display: none;">
                 <h3><i class="fas fa-crown"></i> Панель администратора</h3>
                 <div class="admin-buttons">

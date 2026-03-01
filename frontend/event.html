@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Мероприятие</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Дополнительные стили для страницы мероприятия */
+        .event-page {
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .back-to-list {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #4f8df5;
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-weight: 500;
+            transition: transform 0.2s;
+        }
+
+        .back-to-list:hover {
+            transform: translateX(-5px);
+        }
+
+        .event-header {
+            margin-bottom: 30px;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .event-title {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .event-community-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #4f8df5;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .event-community-link:hover {
+            background: #e0e0e0;
+            transform: translateX(5px);
+        }
+
+        .event-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .event-main-info {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .info-card h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-card h3 i {
+            color: #4f8df5;
+        }
+
+        .info-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .event-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .event-tag.online {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .event-tag.offline {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .community-preview {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .community-preview:hover {
+            background: #e8f0fe;
+            transform: translateX(5px);
+        }
+
+        .community-preview .community-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #4f8df5, #7ab6ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .community-preview .community-icon.volunteer { background: linear-gradient(135deg, #ff8a3d, #ffb347); }
+        .community-preview .community-icon.media { background: linear-gradient(135deg, #9c27b0, #ba68c8); }
+        .community-preview .community-icon.science { background: linear-gradient(135deg, #2e7d32, #4caf50); }
+        .community-preview .community-icon.sport { background: linear-gradient(135deg, #f44336, #ff7961); }
+        .community-preview .community-icon.culture { background: linear-gradient(135deg, #e91e63, #ff6090); }
+
+        .community-preview h4 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .community-preview p {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .register-event-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #4f8df5, #7ab6ff);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .register-event-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79,141,245,0.3);
+        }
+
+        .register-event-btn.registered {
+            background: linear-gradient(135deg, #28a745, #34ce57);
+        }
+
+        .similar-events {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .similar-events h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .similar-events h3 i {
+            color: #4f8df5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 80px 20px;
+            color: #666;
+        }
+
+        .loading i {
+            margin-right: 10px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .error-message i {
+            font-size: 60px;
+            color: #ff6b6b;
+            margin-bottom: 20px;
+        }
+
+        .error-message h2 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .placeholder-text {
+            color: #999;
+            text-align: center;
+            padding: 30px;
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-left">
+        <a href="index.html">
+            <img src="images/logo-nngasu.png" alt="ННГАСУ">
+        </a>
+    </div>
+    <div class="header-title" id="pageTitle">Мероприятие</div>
+    <div class="header-right" id="authSection">
+        <a href="auth.html" class="auth-btn">Авторизация</a>
+    </div>
+</header>
+
+<div class="layout">
+    <aside class="sidebar">
+        <button class="nav-btn" onclick="location.href='index.html'">🏠 Главная</button>
+        <button class="nav-btn active" onclick="location.href='events.html'">📅 Мероприятия</button>
+        <!-- <button class="nav-btn" onclick="location.href='rating.html'">🏆 Рейтинг</button> -->
+        <button class="nav-btn" onclick="location.href='organizations.html'">👥 Сообщества</button>
+    </aside>
+
+    <main class="content">
+        <a href="events.html" class="back-to-list">
+            <i class="fas fa-arrow-left"></i> К списку мероприятий
+        </a>
+        
+        <div class="event-page-container" id="eventContainer">
+            <div class="loading">
+                <i class="fas fa-spinner"></i> Загрузка мероприятия...
+            </div>
+        </div>
+    </main>
+</div>
+
+<script type="module" src="js/auth-state.js"></script>
+<script src="js/event-page.js"></script>
+
+</body>
+</html>

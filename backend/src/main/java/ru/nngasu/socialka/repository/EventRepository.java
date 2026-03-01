@@ -12,4 +12,6 @@ public interface EventRepository extends JpaRepository<EventPassport, Integer> {
             "LEFT JOIN Format f ON e.formatId = f.id " +
             "LEFT JOIN Community c ON e.communityId = c.id")
     List<Object[]> findAllWithDetails();
+
+    long countByCommunityId(Integer communityId);
 }

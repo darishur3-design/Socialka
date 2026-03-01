@@ -8,6 +8,15 @@ onAuthStateChanged(auth, async (user) => {
   if (!headerRight) return;
 
   if (user) {
+    // Пользователь вошёл - сохраняем токен
+    try {
+      const token = await user.getIdToken();
+      localStorage.setItem('token', token);
+      console.log('Токен обновлен в auth-state');
+    } catch (e) {
+      console.error('Ошибка получения токена:', e);
+    }
+    
     // Пользователь вошёл - создаём блок профиля
     try {
       // Получаем токен для запроса к бэкенду
@@ -44,6 +53,8 @@ onAuthStateChanged(auth, async (user) => {
       // Добавляем обработчик для выхода
       document.getElementById("logoutBtn").addEventListener("click", async (e) => {
         e.stopPropagation();
+        // Удаляем токен при выходе
+        localStorage.removeItem('token');
         await signOut(auth);
         window.location.href = "index.html";
       });
@@ -66,12 +77,15 @@ onAuthStateChanged(auth, async (user) => {
       
       document.getElementById("logoutBtn").addEventListener("click", async (e) => {
         e.stopPropagation();
+        // Удаляем токен при выходе
+        localStorage.removeItem('token');
         await signOut(auth);
         window.location.href = "index.html";
       });
     }
   } else {
-    // Не авторизован - показываем кнопку входа
+    // Не авторизован - удаляем токен и показываем кнопку входа
+    localStorage.removeItem('token');
     headerRight.innerHTML = '<a href="auth.html" class="auth-btn">Авторизация</a>';
   }
 });

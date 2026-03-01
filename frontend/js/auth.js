@@ -107,8 +107,10 @@ document.addEventListener("DOMContentLoaded", () => {
           displayName: fullName
         });
 
-        // Firebase token
+        // Firebase token - СОХРАНЯЕМ В localStorage
         const token = await userCredential.user.getIdToken();
+        localStorage.setItem('token', token);
+        console.log('Токен сохранен при регистрации');
 
         // отправка в backend
         const response = await fetch("http://localhost:8080/api/users/register", {
@@ -134,10 +136,15 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       // ================= LOGIN =================
       else {
-        await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        
+        // Firebase token - СОХРАНЯЕМ В localStorage
+        const token = await userCredential.user.getIdToken();
+        localStorage.setItem('token', token);
+        console.log('Токен сохранен при входе');
+        
         alert("Вход выполнен");
         window.location.href = "profile.html";
-
       }
 
     } catch (error) {

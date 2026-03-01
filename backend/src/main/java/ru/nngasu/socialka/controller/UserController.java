@@ -2,9 +2,11 @@ package ru.nngasu.socialka.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.nngasu.socialka.dto.UserProfileDTO;
 import ru.nngasu.socialka.model.User;
 import ru.nngasu.socialka.repository.UserRepository;
 import ru.nngasu.socialka.service.FirebaseService;
+import ru.nngasu.socialka.service.UserService;
 
 import java.util.Optional;
 import java.util.Map;
@@ -16,11 +18,14 @@ public class UserController {
 
     private final FirebaseService firebaseService;
     private final UserRepository userRepository;
+    private final UserService userService;
 
     public UserController(FirebaseService firebaseService,
-                          UserRepository userRepository) {
+                          UserRepository userRepository,
+                          UserService userService) {
         this.firebaseService = firebaseService;
         this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     // регистрация пользователя в PostgreSQL
@@ -52,14 +57,13 @@ public class UserController {
     // ПОЛУЧЕНИЕ ПРОФИЛЯ ПО FIREBASE UID
     @GetMapping("/{uid}")
     public ResponseEntity<?> getUser(@PathVariable String uid) {
+        UserProfileDTO profile = userService.getUserProfile(uid);
 
-        Optional<User> user = userRepository.findByAuthUid(uid);
-
-        if (user.isEmpty()) {
+        if (profile == null) {
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.ok(user.get());
+        return ResponseEntity.ok(profile);
     }
 
     // УДАЛЕНИЕ ПОЛЬЗОВАТЕЛЯ ПО UID
