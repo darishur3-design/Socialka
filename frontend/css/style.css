@@ -1750,3 +1750,25 @@ body {
 .active-filters {
     margin-bottom: 20px;
 }
+/* Кнопка управления сообществом */
+.manage-btn-large {
+    width: 100%;
+    padding: 18px;
+    background: linear-gradient(135deg, #28a745, #34ce57);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 15px;
+    display: block;
+    text-align: center;
+    text-decoration: none;
+}
+
+.manage-btn-large:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(40, 167, 69, 0.3);
+}

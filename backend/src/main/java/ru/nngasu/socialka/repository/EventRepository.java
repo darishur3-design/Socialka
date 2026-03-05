@@ -1,8 +1,12 @@
 package ru.nngasu.socialka.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 import ru.nngasu.socialka.model.EventPassport;
+
 import java.util.List;
 
 public interface EventRepository extends JpaRepository<EventPassport, Integer> {
@@ -14,4 +18,9 @@ public interface EventRepository extends JpaRepository<EventPassport, Integer> {
     List<Object[]> findAllWithDetails();
 
     long countByCommunityId(Integer communityId);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE EventPassport e SET e.status = :status WHERE e.id = :id")
+    int updateStatus(@Param("id") Integer id, @Param("status") Integer status);
 }

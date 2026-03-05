@@ -18,6 +18,13 @@ let formatsData = [];
 let currentDate = new Date();
 let selectedDate = null;
 
+// Константы статусов (добавлено)
+const STATUS = {
+    SENT: 1,
+    APPROVED: 2,
+    REJECTED: 3
+};
+
 function formatDate(date) {
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -135,6 +142,9 @@ function loadFiltersData() {
 // Фильтрация мероприятий
 function filterEvents() {
     return eventsData.filter(event => {
+        // === ВАЖНО: показываем только одобренные мероприятия (статус 2) ===
+        if (event.status !== 2) return false;
+        
         // Фильтр по дате
         if (filters.date && event.date !== filters.date) return false;
         
@@ -232,6 +242,10 @@ function renderEvents() {
     if (!grid) return;
     
     const filtered = filterEvents();
+    
+    console.log('Всего мероприятий в БД:', eventsData.length);
+    console.log('Отфильтровано:', filtered.length);
+    console.log('Статусы мероприятий:', eventsData.map(e => ({id: e.id, title: e.title, status: e.status})));
     
     if (filtered.length === 0) {
         grid.innerHTML = '<div style="text-align: center; padding: 50px; color: #666;">Мероприятия не найдены</div>';

@@ -3,7 +3,9 @@ package ru.nngasu.socialka.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.nngasu.socialka.model.MemberCommunity;
+import ru.nngasu.socialka.model.User;
 import ru.nngasu.socialka.repository.MemberCommunityRepository;
+import ru.nngasu.socialka.repository.UserRepository;
 import ru.nngasu.socialka.service.FirebaseService;
 import ru.nngasu.socialka.service.UserService;
 
@@ -11,6 +13,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/members_communities")
@@ -20,13 +24,16 @@ public class MemberCommunityController {
     private final MemberCommunityRepository memberCommunityRepository;
     private final FirebaseService firebaseService;
     private final UserService userService;
+    private final UserRepository userRepository;
 
     public MemberCommunityController(MemberCommunityRepository memberCommunityRepository,
                                      FirebaseService firebaseService,
-                                     UserService userService) {
+                                     UserService userService,
+                                     UserRepository userRepository) {
         this.memberCommunityRepository = memberCommunityRepository;
         this.firebaseService = firebaseService;
         this.userService = userService;
+        this.userRepository = userRepository;
     }
 
     // Получить все членства пользователя
@@ -163,6 +170,49 @@ public class MemberCommunityController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(401).body(Map.of("error", "Не авторизован"));
+        }
+    }
+
+    // Получить всех участников сообщества
+    @GetMapping("/community/{communityId}")
+    public ResponseEntity<?> getCommunityMembers(@PathVariable Integer communityId) {
+        try {
+            System.out.println("Getting members for community: " + communityId);
+
+            List<MemberCommunity> members = memberCommunityRepository.findByCommunityId(communityId);
+            System.out.println("Found " + members.size() + " members");
+
+            // Для каждого участника получаем данные пользователя
+            List<Map<String, Object>> result = members.stream().map(member -> {
+                Map<String, Object> memberData = new HashMap<>();
+                memberData.put("userId", member.getUserId());
+                memberData.put("communityId", member.getCommunityId());
+                memberData.put("dateJoining", member.getDateJoining());
+                memberData.put("roleId", member.getRoleId());
+
+                // Получаем имя пользователя
+                Optional<User> userOpt = userRepository.findById(member.getUserId().longValue());
+                if (userOpt.isPresent()) {
+                    User user = userOpt.get();
+                    String userName = (user.getFirstName() != null ? user.getFirstName() : "") +
+                            " " + (user.getLastName() != null ? user.getLastName() : "");
+                    memberData.put("userName", userName.trim().isEmpty() ? "Пользователь" : userName.trim());
+                    memberData.put("email", user.getEmail());
+                } else {
+                    memberData.put("userName", "Пользователь " + member.getUserId());
+                }
+
+                // Считаем количество мероприятий участника
+                // TODO: добавить подсчет мероприятий
+                memberData.put("eventsCount", 0);
+
+                return memberData;
+            }).collect(Collectors.toList());
+
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
 }

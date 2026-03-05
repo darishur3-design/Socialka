@@ -40,7 +40,7 @@ public class EventService {
             String formatName = (String) obj[1];
             String communityName = (String) obj[2];
 
-            Map<String, Object> map = new HashMap<>();
+            Map<String, Object> map = new HashMap<>(); // ИСПРАВЛЕНО: убрал лишний символ Ф
             map.put("id", e.getId());
             map.put("title", e.getName());
             map.put("description", e.getDescription());
@@ -52,6 +52,9 @@ public class EventService {
             map.put("community_id", e.getCommunityId());
             map.put("format_id", e.getFormatId());
             map.put("organizers", communityName != null ? communityName : "Неизвестно");
+
+            // Добавляем статус
+            map.put("status", e.getStatus());
 
             return map;
         }).collect(Collectors.toList());
@@ -96,6 +99,9 @@ public class EventService {
         map.put("community_id", e.getCommunityId());
         map.put("format_id", e.getFormatId());
         map.put("organizers", communityName);
+
+        // Добавляем статус
+        map.put("status", e.getStatus());
 
         return map;
     }

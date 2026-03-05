@@ -2,6 +2,8 @@
 const urlParams = new URLSearchParams(window.location.search);
 const communityId = urlParams.get('id');
 
+console.log('Community ID from URL:', communityId);
+
 // Функция для определения класса иконки по тематике
 function getIconClass(thematics) {
     if (!thematics) return 'volunteer';
@@ -46,11 +48,20 @@ function formatDate(dateString) {
 }
 
 async function loadCommunity() {
+    console.log('loadCommunity started, communityId:', communityId);
+    
+    const container = document.getElementById('communityContainer');
+    if (!container) {
+        console.error('Container not found!');
+        return;
+    }
+    
     if (!communityId) {
-        document.getElementById('communityContainer').innerHTML = `
+        container.innerHTML = `
             <div class="error-message">
                 <i class="fas fa-exclamation-circle"></i>
                 <h2>Сообщество не указано</h2>
+                <p>В URL отсутствует ID сообщества</p>
                 <a href="organizations.html" class="auth-btn-large">Вернуться к списку</a>
             </div>
         `;
@@ -58,17 +69,29 @@ async function loadCommunity() {
     }
 
     try {
-        console.log('Загрузка сообщества ID:', communityId);
+        // Показываем загрузку
+        container.innerHTML = `
+            <div class="loading">
+                <i class="fas fa-spinner"></i> Загрузка сообщества...
+            </div>
+        `;
+        
+        console.log('Fetching community data for ID:', communityId);
         
         // Загружаем данные сообщества
         const response = await fetch(`http://localhost:8080/api/communities/${communityId}`);
         
+        console.log('Response status:', response.status);
+        
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            if (response.status === 404) {
+                throw new Error('Сообщество не найдено');
+            }
+            throw new Error(`Ошибка сервера: ${response.status}`);
         }
         
         const community = await response.json();
-        console.log('Загружено сообщество:', community);
+        console.log('Community data loaded:', community);
         
         // Добавляем иконки
         community.iconClass = getIconClass(community.thematics);
@@ -77,20 +100,23 @@ async function loadCommunity() {
         // Загружаем мероприятия сообщества
         let events = [];
         try {
+            console.log('Loading events for community:', communityId);
             const eventsResponse = await fetch(`http://localhost:8080/api/events?community_id=${communityId}`);
             if (eventsResponse.ok) {
                 events = await eventsResponse.json();
+                console.log('Events loaded:', events.length);
             } else {
                 // Если нет фильтра по community_id, загружаем все и фильтруем на клиенте
+                console.log('Filter endpoint not available, loading all events');
                 const allEventsResponse = await fetch('http://localhost:8080/api/events');
                 if (allEventsResponse.ok) {
                     const allEvents = await allEventsResponse.json();
                     events = allEvents.filter(e => e.community_id == communityId);
+                    console.log('Filtered events:', events.length);
                 }
             }
-            console.log('Загружены мероприятия:', events);
         } catch (e) {
-            console.log('Не удалось загрузить мероприятия:', e);
+            console.log('Error loading events:', e);
         }
         
         renderCommunity(community, events);
@@ -99,12 +125,16 @@ async function loadCommunity() {
         await loadJoinStatus(community.id);
         
     } catch (error) {
-        console.error('Ошибка загрузки:', error);
-        document.getElementById('communityContainer').innerHTML = `
+        console.error('Error in loadCommunity:', error);
+        container.innerHTML = `
             <div class="error-message">
                 <i class="fas fa-exclamation-circle"></i>
                 <h2>Ошибка загрузки сообщества</h2>
                 <p>${error.message}</p>
+                <button onclick="location.reload()" class="auth-btn" style="margin: 20px; padding: 10px 30px;">
+                    Повторить
+                </button>
+                <br>
                 <a href="organizations.html" class="auth-btn-large">Вернуться к списку</a>
             </div>
         `;
@@ -152,11 +182,17 @@ function renderCommunity(community, events) {
             <button class="join-btn-large" id="joinCommunityBtn" data-id="${community.id}">
                 <i class="fas fa-user-plus"></i> Вступить в сообщество
             </button>
+            
+            <!-- Контейнер для кнопки управления (изначально пустой) -->
+            <div id="managementBtnContainer" style="margin-top: 15px;"></div>
         </div>
     `;
     
     // Добавляем обработчик для кнопки вступления
-    document.getElementById('joinCommunityBtn').addEventListener('click', toggleJoinCommunity);
+    const joinBtn = document.getElementById('joinCommunityBtn');
+    if (joinBtn) {
+        joinBtn.addEventListener('click', toggleJoinCommunity);
+    }
 }
 
 function renderEventsList(events) {
@@ -180,27 +216,57 @@ async function loadJoinStatus(communityId) {
         const token = localStorage.getItem('token');
         if (!token) return;
         
-        // Проверяем, есть ли эндпоинт для проверки статуса
-        try {
-            const response = await fetch(`http://localhost:8080/api/members_communities/check?community_id=${communityId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+        console.log('Checking join status for community:', communityId);
+        
+        const response = await fetch(`http://localhost:8080/api/members_communities/check?community_id=${communityId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const isJoined = await response.json();
+            console.log('Join status:', isJoined);
             
-            if (response.ok) {
-                const isJoined = await response.json();
-                const joinBtn = document.getElementById('joinCommunityBtn');
-                if (joinBtn && isJoined) {
+            const joinBtn = document.getElementById('joinCommunityBtn');
+            if (joinBtn) {
+                if (isJoined) {
                     joinBtn.innerHTML = '<i class="fas fa-check"></i> Вы в сообществе';
                     joinBtn.classList.add('joined');
+                    
+                    // Добавляем кнопку управления только если пользователь состоит в сообществе
+                    const managementContainer = document.getElementById('managementBtnContainer');
+                    if (managementContainer) {
+                        // ID Профкома = 1
+                        const PROFCOM_ID = 1;
+                        
+                        if (communityId == PROFCOM_ID) {
+                            // Для Профкома показываем кнопку управления
+                            managementContainer.innerHTML = `
+                                <a href="profkom-management.html" class="join-btn-large" style="background: linear-gradient(135deg, #ff8a3d, #ffb347); text-decoration: none; display: block; text-align: center;">
+                                    <i class="fas fa-cog"></i> Управление Профкома
+                                </a>
+                            `;
+                        } else {
+                            // Для обычных сообществ показываем кнопку управления
+                            managementContainer.innerHTML = `
+                                <a href="community-management.html?id=${communityId}" class="join-btn-large" style="background: linear-gradient(135deg, #28a745, #34ce57); text-decoration: none; display: block; text-align: center;">
+                                    <i class="fas fa-cog"></i> Управление сообществом
+                                </a>
+                            `;
+                        }
+                    }
+                } else {
+                    // Если пользователь не состоит в сообществе, убираем кнопку управления
+                    const managementContainer = document.getElementById('managementBtnContainer');
+                    if (managementContainer) {
+                        managementContainer.innerHTML = '';
+                    }
                 }
             }
-        } catch (e) {
-            console.log('Эндпоинт проверки не работает, пропускаем');
         }
     } catch (error) {
-        console.error('Ошибка загрузки статуса:', error);
+        console.error('Error loading join status:', error);
     }
 }
 
@@ -217,8 +283,8 @@ async function toggleJoinCommunity(e) {
             return;
         }
         
-        console.log('Токен:', token);
-        console.log('Community ID:', communityId);
+        console.log('Toggling membership for community:', communityId);
+        console.log('Is joined:', isJoined);
         
         if (isJoined) {
             // Выход из сообщества
@@ -232,10 +298,17 @@ async function toggleJoinCommunity(e) {
             if (response.ok) {
                 btn.innerHTML = '<i class="fas fa-user-plus"></i> Вступить в сообщество';
                 btn.classList.remove('joined');
+                
+                // Убираем кнопку управления
+                const managementContainer = document.getElementById('managementBtnContainer');
+                if (managementContainer) {
+                    managementContainer.innerHTML = '';
+                }
+                
                 alert('Вы покинули сообщество');
             } else {
                 const error = await response.text();
-                console.error('Ошибка при выходе:', error);
+                console.error('Error leaving:', error);
                 alert('Ошибка при выходе из сообщества');
             }
         } else {
@@ -256,15 +329,26 @@ async function toggleJoinCommunity(e) {
             if (response.ok) {
                 btn.innerHTML = '<i class="fas fa-check"></i> Вы в сообществе';
                 btn.classList.add('joined');
+                
+                // Добавляем кнопку управления
+                const managementContainer = document.getElementById('managementBtnContainer');
+                if (managementContainer) {
+                    managementContainer.innerHTML = `
+                        <a href="community-management.html?id=${communityId}" class="join-btn-large" style="background: linear-gradient(135deg, #28a745, #34ce57); text-decoration: none; display: block; text-align: center;">
+                            <i class="fas fa-cog"></i> Управление сообществом
+                        </a>
+                    `;
+                }
+                
                 alert('Вы вступили в сообщество');
             } else {
                 const error = await response.text();
-                console.error('Ошибка при вступлении:', error);
+                console.error('Error joining:', error);
                 alert('Ошибка при вступлении в сообщество');
             }
         }
     } catch (error) {
-        console.error('Ошибка:', error);
+        console.error('Error:', error);
         alert('Произошла ошибка: ' + error.message);
     }
 }

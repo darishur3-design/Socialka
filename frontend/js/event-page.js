@@ -2,6 +2,8 @@
 const urlParams = new URLSearchParams(window.location.search);
 const eventId = urlParams.get('id');
 
+console.log('Event ID from URL:', eventId);
+
 // Функция для определения класса иконки по тематике
 function getIconClass(thematics) {
     if (!thematics) return 'volunteer';
@@ -29,207 +31,188 @@ function getIconName(thematics) {
 // Форматирование даты
 function formatDate(dateString) {
     if (!dateString) return '';
-    // Если дата уже в формате DD-MM-YYYY
-    if (dateString.includes('-')) return dateString;
-    
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
+    return dateString; // Возвращаем как есть
 }
 
 async function loadEvent() {
+    console.log('loadEvent started, eventId:', eventId);
+    
+    const container = document.getElementById('eventContainer');
+    if (!container) {
+        console.error('Container not found!');
+        return;
+    }
+    
     if (!eventId) {
-        document.getElementById('eventContainer').innerHTML = `
-            <div class="error-message">
-                <i class="fas fa-exclamation-circle"></i>
+        container.innerHTML = `
+            <div class="error-message" style="text-align: center; padding: 50px;">
+                <i class="fas fa-exclamation-circle" style="font-size: 60px; color: #ff6b6b;"></i>
                 <h2>Мероприятие не указано</h2>
-                <a href="events.html" class="auth-btn-large">Вернуться к списку</a>
+                <a href="events.html" class="auth-btn-large" style="display: inline-block; margin-top: 20px;">Вернуться к списку</a>
             </div>
         `;
         return;
     }
 
     try {
-        console.log('Загрузка мероприятия ID:', eventId);
+        // Показываем загрузку
+        container.innerHTML = `
+            <div class="loading" style="text-align: center; padding: 80px;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 40px; color: #4f8df5;"></i>
+                <p style="margin-top: 20px; color: #666;">Загрузка мероприятия...</p>
+            </div>
+        `;
+        
+        console.log('Fetching event data for ID:', eventId);
         
         // Загружаем данные мероприятия
         const response = await fetch(`http://localhost:8080/api/events/${eventId}`);
         
+        console.log('Response status:', response.status);
+        
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`Ошибка загрузки: ${response.status}`);
         }
         
         const event = await response.json();
-        console.log('Загружено мероприятие:', event);
+        console.log('Event data loaded:', event);
         
-        // Загружаем данные сообщества
+        // Загружаем данные сообщества (если есть community_id)
         let community = null;
-        try {
-            const communityResponse = await fetch(`http://localhost:8080/api/communities/${event.community_id}`);
-            if (communityResponse.ok) {
-                community = await communityResponse.json();
-                community.iconClass = getIconClass(community.thematics);
-                community.icon = getIconName(community.thematics);
+        if (event.community_id) {
+            try {
+                console.log('Loading community data for ID:', event.community_id);
+                const communityResponse = await fetch(`http://localhost:8080/api/communities/${event.community_id}`);
+                if (communityResponse.ok) {
+                    community = await communityResponse.json();
+                    console.log('Community data loaded:', community);
+                    community.iconClass = getIconClass(community.thematics);
+                    community.icon = getIconName(community.thematics);
+                }
+            } catch (e) {
+                console.log('Error loading community:', e);
             }
-        } catch (e) {
-            console.log('Не удалось загрузить сообщество');
         }
         
+        // Рендерим страницу
         renderEvent(event, community);
         
     } catch (error) {
-        console.error('Ошибка загрузки:', error);
-        document.getElementById('eventContainer').innerHTML = `
-            <div class="error-message">
-                <i class="fas fa-exclamation-circle"></i>
+        console.error('Error in loadEvent:', error);
+        container.innerHTML = `
+            <div class="error-message" style="text-align: center; padding: 50px;">
+                <i class="fas fa-exclamation-circle" style="font-size: 60px; color: #ff6b6b;"></i>
                 <h2>Ошибка загрузки мероприятия</h2>
-                <p>${error.message}</p>
-                <a href="events.html" class="auth-btn-large">Вернуться к списку</a>
+                <p style="color: #666; margin: 20px;">${error.message}</p>
+                <button onclick="location.reload()" class="auth-btn" style="margin: 10px;">Повторить</button>
+                <a href="events.html" class="auth-btn-large" style="display: inline-block; margin-top: 10px;">Вернуться к списку</a>
             </div>
         `;
     }
 }
 
 function renderEvent(event, community) {
+    console.log('Rendering event with data:', event);
+    
     const container = document.getElementById('eventContainer');
+    if (!container) {
+        console.error('Container not found!');
+        return;
+    }
+    
+    // Определяем класс для формата
     const formatClass = event.format === 'Онлайн' ? 'online' : 'offline';
     
+    // Формируем HTML для сообщества
+    const communityHtml = community ? `
+        <a href="community.html?id=${community.id}" class="event-community-link" style="display: inline-flex; align-items: center; gap: 10px; padding: 10px 20px; background: #f0f0f0; border-radius: 30px; color: #4f8df5; text-decoration: none; margin-top: 15px;">
+            <i class="fas fa-users"></i>
+            <span>${community.name}</span>
+            <i class="fas fa-chevron-right"></i>
+        </a>
+    ` : '';
+    
+    const communityPreviewHtml = community ? `
+        <div class="info-card" style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <h3 style="font-size: 16px; color: #666; margin-bottom: 15px;"><i class="fas fa-building" style="color: #4f8df5;"></i> Организатор</h3>
+            <a href="community.html?id=${community.id}" style="display: flex; align-items: center; gap: 15px; text-decoration: none; color: inherit;">
+                <div style="width: 50px; height: 50px; border-radius: 12px; background: linear-gradient(135deg, #4f8df5, #7ab6ff); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">
+                    <i class="${community.icon || 'fas fa-users'}"></i>
+                </div>
+                <div>
+                    <h4 style="font-size: 16px; color: #333; margin-bottom: 4px;">${community.name}</h4>
+                    <p style="font-size: 13px; color: #666;">${community.thematics || 'Без тематики'}</p>
+                </div>
+            </a>
+        </div>
+    ` : '';
+    
     container.innerHTML = `
-        <div class="event-page">
-            <div class="event-header">
-                <h1 class="event-title">${event.title}</h1>
-                ${community ? `
-                    <a href="community.html?id=${community.id}" class="event-community-link">
-                        <i class="fas fa-users"></i>
-                        <span>${community.name}</span>
-                        <i class="fas fa-chevron-right"></i>
-                    </a>
-                ` : ''}
+        <div style="padding: 30px; max-width: 1200px; margin: 0 auto;">
+            <a href="events.html" style="display: inline-flex; align-items: center; gap: 8px; color: #4f8df5; text-decoration: none; margin-bottom: 20px;">
+                <i class="fas fa-arrow-left"></i> К списку мероприятий
+            </a>
+            
+            <div style="background: white; border-radius: 20px; padding: 30px; margin-bottom: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <h1 style="font-size: 32px; color: #333; margin-bottom: 15px;">${event.title}</h1>
+                ${communityHtml}
             </div>
             
-            <div class="event-grid">
-                <div class="event-main-info">
-                    <div class="info-card">
-                        <h3><i class="fas fa-calendar-alt"></i> Дата и время</h3>
-                        <p>${formatDate(event.date)} в ${event.time || '00:00'}</p>
+            <div style="display: grid; grid-template-columns: 1fr 350px; gap: 30px; margin-bottom: 40px;">
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                        <h3 style="font-size: 16px; color: #666; margin-bottom: 15px;"><i class="fas fa-calendar-alt" style="color: #4f8df5;"></i> Дата и время</h3>
+                        <p style="color: #333; font-size: 16px;">${event.date} в ${event.time || '00:00'}</p>
                     </div>
                     
-                    <div class="info-card">
-                        <h3><i class="fas fa-map-marker-alt"></i> Место проведения</h3>
-                        <p>${event.location || 'Не указано'}</p>
+                    <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                        <h3 style="font-size: 16px; color: #666; margin-bottom: 15px;"><i class="fas fa-map-marker-alt" style="color: #4f8df5;"></i> Место проведения</h3>
+                        <p style="color: #333; font-size: 16px;">${event.location || 'Не указано'}</p>
                     </div>
                     
-                    <div class="info-card">
-                        <h3><i class="fas fa-tag"></i> Формат</h3>
-                        <p><span class="event-tag ${formatClass}">${event.format}</span></p>
+                    <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                        <h3 style="font-size: 16px; color: #666; margin-bottom: 15px;"><i class="fas fa-tag" style="color: #4f8df5;"></i> Формат</h3>
+                        <span style="display: inline-block; padding: 6px 16px; border-radius: 30px; font-size: 14px; background: ${formatClass === 'online' ? '#e8f5e9' : '#e3f2fd'}; color: ${formatClass === 'online' ? '#2e7d32' : '#1976d2'};">${event.format}</span>
                     </div>
                     
-                    <div class="info-card">
-                        <h3><i class="fas fa-align-left"></i> Описание</h3>
-                        <p>${event.description || 'Нет описания'}</p>
+                    <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                        <h3 style="font-size: 16px; color: #666; margin-bottom: 15px;"><i class="fas fa-align-left" style="color: #4f8df5;"></i> Описание</h3>
+                        <p style="color: #666; line-height: 1.6;">${event.description || 'Нет описания'}</p>
                     </div>
                 </div>
                 
-                <div class="event-sidebar">
-                    <div class="info-card">
-                        <h3><i class="fas fa-user-tie"></i> Ответственный</h3>
-                        <p>${event.organizers || 'Не указан'}</p>
+                <div>
+                    <div style="background: white; border-radius: 16px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                        <h3 style="font-size: 16px; color: #666; margin-bottom: 15px;"><i class="fas fa-user-tie" style="color: #4f8df5;"></i> Ответственный</h3>
+                        <p style="color: #333;">${event.organizers || 'Не указан'}</p>
                     </div>
                     
-                    ${community ? `
-                        <div class="info-card">
-                            <h3><i class="fas fa-building"></i> Организатор</h3>
-                            <a href="community.html?id=${community.id}" class="community-preview">
-                                <div class="community-icon ${community.iconClass}">
-                                    <i class="${community.icon}"></i>
-                                </div>
-                                <div>
-                                    <h4>${community.name}</h4>
-                                    <p>${community.thematics || 'Без тематики'}</p>
-                                </div>
-                            </a>
-                        </div>
-                    ` : ''}
+                    ${communityPreviewHtml}
                     
-                    <button class="register-event-btn" id="registerEventBtn" data-id="${event.id}">
+                    <button id="registerEventBtn" data-id="${event.id}" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #4f8df5, #7ab6ff); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;">
                         <i class="fas fa-check-circle"></i> Записаться
                     </button>
                 </div>
             </div>
             
-            <div class="similar-events">
-                <h3><i class="fas fa-calendar-alt"></i> Похожие мероприятия</h3>
-                <p class="placeholder-text">Здесь будут похожие мероприятия</p>
+            <div style="background: white; border-radius: 20px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <h3 style="font-size: 18px; color: #333; margin-bottom: 20px;"><i class="fas fa-calendar-alt" style="color: #4f8df5;"></i> Похожие мероприятия</h3>
+                <p style="color: #999; text-align: center; padding: 30px;">Здесь будут похожие мероприятия</p>
             </div>
         </div>
     `;
     
     // Добавляем обработчик для кнопки записи
-    document.getElementById('registerEventBtn').addEventListener('click', toggleRegistration);
-}
-
-async function toggleRegistration(e) {
-    const btn = e.currentTarget;
-    const eventId = btn.dataset.id;
-    
-    try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            alert('Необходимо авторизоваться');
-            window.location.href = 'auth.html';
-            return;
-        }
-        
-        // Проверяем текущий статус
-        const checkResponse = await fetch(`http://localhost:8080/api/event_participants/check?event_id=${eventId}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+    const registerBtn = document.getElementById('registerEventBtn');
+    if (registerBtn) {
+        registerBtn.addEventListener('click', () => {
+            alert('Функция записи на мероприятие в разработке');
         });
-        
-        const isRegistered = checkResponse.ok ? await checkResponse.json() : false;
-        
-        if (isRegistered) {
-            // Отмена регистрации
-            const response = await fetch(`http://localhost:8080/api/event_participants/${eventId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            
-            if (response.ok) {
-                btn.innerHTML = '<i class="fas fa-check-circle"></i> Записаться';
-                btn.classList.remove('registered');
-                alert('Вы отменили запись');
-            }
-        } else {
-            // Регистрация
-            const response = await fetch('http://localhost:8080/api/event_participants', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    event_id: parseInt(eventId),
-                    date_registration: new Date().toISOString().split('T')[0],
-                    status: 'confirmed'
-                })
-            });
-            
-            if (response.ok) {
-                btn.innerHTML = '<i class="fas fa-check"></i> Вы записаны';
-                btn.classList.add('registered');
-                alert('Вы успешно записаны!');
-            }
-        }
-    } catch (error) {
-        console.error('Ошибка:', error);
-        alert('Произошла ошибка');
     }
 }
 
-document.addEventListener('DOMContentLoaded', loadEvent);
+// Загружаем данные при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM полностью загружен');
+    loadEvent();
+});
