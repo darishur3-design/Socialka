@@ -22,12 +22,14 @@ C:\Users\Administrator\Desktop\Socialka\backend\src\main\java\ru\nngasu\socialka
 C:\Users\Administrator\Desktop\Socialka\backend\src\main\java\ru\nngasu\socialka\model\EventMto.java
 C:\Users\Administrator\Desktop\Socialka\backend\src\main\java\ru\nngasu\socialka\repository\MemberCommunityRepository.java
 C:\Users\Administrator\Desktop\Socialka\backend\src\main\java\ru\nngasu\socialka\repository\OrganizerRepository.java
+C:\Users\Administrator\Desktop\Socialka\backend\src\main\java\ru\nngasu\socialka\controller\EventParticipantController.java
 C:\Users\Administrator\Desktop\Socialka\backend\src\main\java\ru\nngasu\socialka\model\EventBudget.java
 C:\Users\Administrator\Desktop\Socialka\backend\src\main\java\ru\nngasu\socialka\model\Organizer.java
 C:\Users\Administrator\Desktop\Socialka\backend\src\main\java\ru\nngasu\socialka\controller\EventController.java
 C:\Users\Administrator\Desktop\Socialka\backend\src\main\java\ru\nngasu\socialka\model\Community.java
 C:\Users\Administrator\Desktop\Socialka\backend\src\main\java\ru\nngasu\socialka\controller\OrganizerController.java
 C:\Users\Administrator\Desktop\Socialka\backend\src\main\java\ru\nngasu\socialka\service\FirebaseService.java
+C:\Users\Administrator\Desktop\Socialka\backend\src\main\java\ru\nngasu\socialka\service\QRCodeService.java
 C:\Users\Administrator\Desktop\Socialka\backend\src\main\java\ru\nngasu\socialka\controller\FormatController.java
 C:\Users\Administrator\Desktop\Socialka\backend\src\main\java\ru\nngasu\socialka\controller\EventBudgetController.java
 C:\Users\Administrator\Desktop\Socialka\backend\src\main\java\ru\nngasu\socialka\controller\UserController.java

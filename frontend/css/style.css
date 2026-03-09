@@ -1772,3 +1772,16 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 15px 30px rgba(40, 167, 69, 0.3);
 }
+select#communityLeader,
+select#eventResponsible {
+    appearance: auto;
+    -webkit-appearance: menulist;
+    -moz-appearance: menulist;
+    background: white;
+    border: 1px solid #e0e0e0;
+    padding: 12px 15px;
+    border-radius: 12px;
+    font-size: 14px;
+    width: 100%;
+    cursor: pointer;
+}

@@ -59,10 +59,7 @@ public class CommunityService {
 
         Community c = optional.get();
 
-        // Подсчет участников
         long membersCount = memberRepository.findByCommunityId(c.getId()).size();
-
-        // Подсчет мероприятий
         long eventsCount = eventRepository.countByCommunityId(c.getId());
 
         Map<String, Object> map = new HashMap<>();
@@ -74,6 +71,11 @@ public class CommunityService {
         map.put("creationYear", c.getCreationYear());
         map.put("membersCount", membersCount);
         map.put("eventsCount", eventsCount);
+
+        // Добавляем информацию о главе сообщества
+        map.put("leader", c.getLeader());
+        map.put("leaderId", c.getLeaderId());
+
         map.put("iconClass", getIconClass(c.getThematics()));
         map.put("iconName", getIconName(c.getThematics()));
 

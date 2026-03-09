@@ -66,50 +66,33 @@ public class EventController {
                 event.setCommunityId(Integer.parseInt(communityId.toString()));
             }
 
-            // Дополнительные поля
+            // responsible - ID из members_communities (число)
             Object responsible = payload.get("responsible");
             if (responsible != null) {
-                event.setResponsible(responsible.toString());
+                event.setResponsible(Integer.parseInt(responsible.toString()));
             }
 
-            Object responsiblePhone = payload.get("responsible_phone");
-            if (responsiblePhone != null) {
-                event.setResponsiblePhone(responsiblePhone.toString());
-            }
+            // responsible_phone - текст
+            event.setResponsiblePhone((String) payload.get("responsible_phone"));
 
-            Object communityLeader = payload.get("community_leader");
-            if (communityLeader != null) {
-                event.setCommunityLeader(communityLeader.toString());
-            }
+            // community_leader - текст (имя руководителя)
+            event.setCommunityLeader((String) payload.get("community_leader"));
 
-            Object smartGoal = payload.get("smart_goal");
-            if (smartGoal != null) {
-                event.setSmartGoal(smartGoal.toString());
-            }
+            event.setSmartGoal((String) payload.get("smart_goal"));
 
             Object directionId = payload.get("direction_id");
             if (directionId != null) {
                 event.setDirectionId(Integer.parseInt(directionId.toString()));
             }
 
-            Object targetAudience = payload.get("target_audience");
-            if (targetAudience != null) {
-                event.setTargetAudience(targetAudience.toString());
-            }
+            event.setTargetAudience((String) payload.get("target_audience"));
+            event.setQuantitative((String) payload.get("quantitative"));
+            event.setQualitative((String) payload.get("qualitative"));
 
-            Object quantitative = payload.get("quantitative");
-            if (quantitative != null) {
-                event.setQuantitative(quantitative.toString());
-            }
-
-            Object qualitative = payload.get("qualitative");
-            if (qualitative != null) {
-                event.setQualitative(qualitative.toString());
-            }
-
-            // Статус
-            Object status = payload.get("status");
-            event.setStatus(status != null ? Integer.parseInt(status.toString()) : 1);
+            // Обязательные поля из БД
+            event.setEventLevel(1); // Обычное мероприятие (из таблицы event_levels)
+            event.setCommunityRoleId(1); // Организатор (из таблицы community_roles)
+            event.setStatus(1); // Отправлено (из таблицы events_status)
 
             event.setCreatedAt(LocalDateTime.now());
 

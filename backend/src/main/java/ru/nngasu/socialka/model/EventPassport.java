@@ -38,15 +38,32 @@ public class EventPassport {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    // === НОВЫЕ ПОЛЯ ===
-    private String responsible;           // Ответственный за проведение
-    private String responsiblePhone;       // Телефон ответственного
-    private String communityLeader;        // Руководитель сообщества
-    private String smartGoal;              // Цель по SMART
-    private Integer directionId;            // ID направления реализации
-    private String targetAudience;          // Целевая аудитория
-    private String quantitative;            // Количественные показатели
-    private String qualitative;             // Качественные показатели
+    // === ПОЛЯ ИЗ БД ===
+    @Column(name = "event_level")
+    private Integer eventLevel;           // уровень мероприятия
+
+    @Column(name = "community_role_id")
+    private Integer communityRoleId;      // роль сообщества
+
+    private Integer responsible;          // ID ответственного (из members_communities)
+
+    @Column(name = "responsible_phone")
+    private String responsiblePhone;      // телефон ответственного
+
+    @Column(name = "community_leader")
+    private String communityLeader;       // руководитель сообщества (текст!)
+
+    @Column(name = "smart_goal")
+    private String smartGoal;             // цель по SMART
+
+    @Column(name = "direction_id")
+    private Integer directionId;          // ID направления
+
+    @Column(name = "target_audience")
+    private String targetAudience;        // целевая аудитория
+
+    private String quantitative;          // количественные показатели
+    private String qualitative;           // качественные показатели
 
     // ===== ГЕТТЕРЫ =====
     public Integer getId() { return id; }
@@ -60,8 +77,9 @@ public class EventPassport {
     public String getQrToken() { return qrToken; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 
-    // Геттеры для новых полей
-    public String getResponsible() { return responsible; }
+    public Integer getEventLevel() { return eventLevel; }
+    public Integer getCommunityRoleId() { return communityRoleId; }
+    public Integer getResponsible() { return responsible; }
     public String getResponsiblePhone() { return responsiblePhone; }
     public String getCommunityLeader() { return communityLeader; }
     public String getSmartGoal() { return smartGoal; }
@@ -82,8 +100,9 @@ public class EventPassport {
     public void setQrToken(String qrToken) { this.qrToken = qrToken; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    // Сеттеры для новых полей
-    public void setResponsible(String responsible) { this.responsible = responsible; }
+    public void setEventLevel(Integer eventLevel) { this.eventLevel = eventLevel; }
+    public void setCommunityRoleId(Integer communityRoleId) { this.communityRoleId = communityRoleId; }
+    public void setResponsible(Integer responsible) { this.responsible = responsible; }
     public void setResponsiblePhone(String responsiblePhone) { this.responsiblePhone = responsiblePhone; }
     public void setCommunityLeader(String communityLeader) { this.communityLeader = communityLeader; }
     public void setSmartGoal(String smartGoal) { this.smartGoal = smartGoal; }

@@ -18,7 +18,7 @@ let formatsData = [];
 let currentDate = new Date();
 let selectedDate = null;
 
-// Константы статусов (добавлено)
+// Константы статусов
 const STATUS = {
     SENT: 1,
     APPROVED: 2,
@@ -68,7 +68,6 @@ function renderCalendar() {
 // Загрузка данных из БД
 async function loadData() {
     try {
-        // Загрузка мероприятий
         console.log('Загрузка мероприятий...');
         const eventsResponse = await fetch('http://localhost:8080/api/events');
         
@@ -79,15 +78,12 @@ async function loadData() {
         eventsData = await eventsResponse.json();
         console.log('Загружены мероприятия:', eventsData);
         
-        // Загрузка сообществ
         const communitiesResponse = await fetch('http://localhost:8080/api/communities');
         communitiesData = await communitiesResponse.json();
         
-        // Загрузка форматов
         const formatsResponse = await fetch('http://localhost:8080/api/formats');
         formatsData = await formatsResponse.json();
         
-        // Загружаем данные в фильтры
         loadFiltersData();
         renderEvents();
         
@@ -105,9 +101,7 @@ async function loadData() {
     }
 }
 
-// Загрузка данных в фильтры
 function loadFiltersData() {
-    // Загрузка сообществ
     const communityDropdown = document.getElementById('communityDropdown');
     if (communityDropdown) {
         let communityHtml = '<div class="dropdown-item" data-community="all">Все сообщества</div>';
@@ -117,7 +111,6 @@ function loadFiltersData() {
         communityDropdown.innerHTML = communityHtml;
     }
     
-    // Загрузка форматов
     const formatDropdown = document.getElementById('formatDropdown');
     if (formatDropdown) {
         let formatHtml = '<div class="dropdown-item" data-format="all">Все форматы</div>';
@@ -127,7 +120,6 @@ function loadFiltersData() {
         formatDropdown.innerHTML = formatHtml;
     }
     
-    // Загрузка мест (уникальные значения из мероприятий)
     const locations = [...new Set(eventsData.map(e => e.location).filter(Boolean))];
     const locationDropdown = document.getElementById('locationDropdown');
     if (locationDropdown) {
@@ -139,16 +131,13 @@ function loadFiltersData() {
     }
 }
 
-// Фильтрация мероприятий
 function filterEvents() {
     return eventsData.filter(event => {
-        // === ВАЖНО: показываем только одобренные мероприятия (статус 2) ===
+        // Показываем только одобренные мероприятия (статус 2)
         if (event.status !== 2) return false;
         
-        // Фильтр по дате
         if (filters.date && event.date !== filters.date) return false;
         
-        // Фильтр по времени
         if (filters.time !== 'all') {
             const hour = parseInt(event.time?.split(':')[0] || '0');
             if (filters.time === 'morning' && hour >= 12) return false;
@@ -156,20 +145,14 @@ function filterEvents() {
             if (filters.time === 'evening' && hour < 18) return false;
         }
         
-        // Фильтр по сообществу
         if (filters.community !== 'all' && event.community !== filters.community) return false;
-        
-        // Фильтр по формату
         if (filters.format !== 'all' && event.format !== filters.format) return false;
-        
-        // Фильтр по месту
         if (filters.location !== 'all' && event.location !== filters.location) return false;
         
         return true;
     });
 }
 
-// Обновление активных фильтров
 function updateActiveFilters() {
     const container = document.getElementById('activeFilters');
     if (!container) return;
@@ -218,7 +201,6 @@ function updateActiveFilters() {
     }
 }
 
-// Удаление фильтра
 window.removeFilter = function(filter) {
     if (filter === 'date') {
         filters.date = null;
@@ -234,6 +216,100 @@ window.removeFilter = function(filter) {
     }
     renderEvents();
     updateActiveFilters();
+};
+
+// Функция для открытия модального окна участника
+async function openParticipantModal(eventId) {
+    const modal = document.getElementById('participantModal');
+    if (!modal) {
+        console.error('Participant modal not found');
+        return;
+    }
+    
+    modal.classList.add('active');
+    
+    // Показываем загрузку
+    document.getElementById('qrCodeContainer').innerHTML = '<div class="loading" style="padding: 30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка QR-кода...</div>';
+    document.getElementById('participantEventInfo').innerHTML = '';
+    
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Необходимо авторизоваться');
+            window.location.href = 'auth.html';
+            return;
+        }
+        
+        console.log('Загрузка данных для мероприятия:', eventId);
+        
+        // Загружаем информацию о мероприятии
+        const eventResponse = await fetch(`http://localhost:8080/api/events/${eventId}`);
+        if (!eventResponse.ok) throw new Error('Ошибка загрузки мероприятия');
+        const event = await eventResponse.json();
+        
+        // Загружаем сообщество
+        const communityResponse = await fetch(`http://localhost:8080/api/communities/${event.community_id}`);
+        const community = await communityResponse.json();
+        
+        // Загружаем QR-код
+        const qrResponse = await fetch(`http://localhost:8080/api/events/${eventId}/participant-qr`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        let qrHtml = '';
+        if (qrResponse.ok) {
+            const qrData = await qrResponse.json();
+            qrHtml = `<img src="${qrData.qrCode}" style="width: 250px; height: 250px; display: block; margin: 0 auto; border-radius: 8px;">`;
+        } else {
+            qrHtml = '<p style="color: #ff4444; padding: 20px;">Ошибка загрузки QR-кода</p>';
+        }
+        
+        // Обновляем содержимое модального окна
+        document.getElementById('qrCodeContainer').innerHTML = qrHtml;
+        
+        document.getElementById('participantEventInfo').innerHTML = `
+            <div class="participant-info-item">
+                <div class="participant-info-label">Название</div>
+                <div class="participant-info-value">${event.title}</div>
+            </div>
+            <div class="participant-info-item">
+                <div class="participant-info-label">Сообщество</div>
+                <div class="participant-info-value">${community.name}</div>
+            </div>
+            <div class="participant-info-item">
+                <div class="participant-info-label">Дата и время</div>
+                <div class="participant-info-value">${event.date} ${event.time || '10:00'}</div>
+            </div>
+            <div class="participant-info-item">
+                <div class="participant-info-label">Место</div>
+                <div class="participant-info-value">${event.location || 'Не указано'}</div>
+            </div>
+            <div class="participant-info-item">
+                <div class="participant-info-label">Формат</div>
+                <div class="participant-info-value">${event.format || 'Офлайн'}</div>
+            </div>
+            <div class="participant-info-item">
+                <div class="participant-info-label">Описание</div>
+                <div class="participant-info-value">${event.description || 'Нет описания'}</div>
+            </div>
+        `;
+        
+    } catch (error) {
+        console.error('Ошибка загрузки:', error);
+        document.getElementById('qrCodeContainer').innerHTML = '<p style="color: #ff4444; padding: 20px;">Ошибка загрузки данных</p>';
+        document.getElementById('participantEventInfo').innerHTML = '<p style="color: #ff4444;">Не удалось загрузить информацию</p>';
+    }
+}
+
+// Функция для скачивания QR-кода
+window.downloadQRCode = function() {
+    const qrImg = document.querySelector('#qrCodeContainer img');
+    if (!qrImg) return;
+    
+    const link = document.createElement('a');
+    link.download = 'qr-code.png';
+    link.href = qrImg.src;
+    link.click();
 };
 
 // Рендер мероприятий
@@ -282,14 +358,13 @@ function renderEvents() {
         `;
         
         card.addEventListener('click', () => {
-            window.location.href = `event.html?id=${event.id}`;
-        });
+    window.location.href = `event.html?id=${event.id}`;
+});
         
         grid.appendChild(card);
     });
 }
 
-// Закрытие всех дропдаунов
 function closeAllDropdowns() {
     document.querySelectorAll('.dropdown-menu').forEach(menu => {
         menu.classList.remove('show');
@@ -301,7 +376,32 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCalendar();
     loadData();
     
-    // Дата фильтр
+    // Обработчики закрытия модального окна
+    const closeModal = document.getElementById('closeParticipantModal');
+    const closeModalBtn = document.getElementById('closeParticipantModalBtn');
+    const modal = document.getElementById('participantModal');
+    
+    if (closeModal) {
+        closeModal.addEventListener('click', () => {
+            modal.classList.remove('active');
+        });
+    }
+    
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', () => {
+            modal.classList.remove('active');
+        });
+    }
+    
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+    }
+    
+    // Обработчики фильтров
     const dateFilter = document.getElementById('dateFilter');
     const dateDropdown = document.getElementById('dateDropdown');
     
@@ -370,7 +470,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Время фильтр
     const timeFilter = document.getElementById('timeFilter');
     const timeDropdown = document.getElementById('timeDropdown');
     
@@ -393,7 +492,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Сообщество фильтр
     const communityFilter = document.getElementById('communityFilter');
     const communityDropdown = document.getElementById('communityDropdown');
     
@@ -416,7 +514,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Формат фильтр
     const formatFilter = document.getElementById('formatFilter');
     const formatDropdown = document.getElementById('formatDropdown');
     
@@ -439,7 +536,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Место фильтр
     const locationFilter = document.getElementById('locationFilter');
     const locationDropdown = document.getElementById('locationDropdown');
     
@@ -462,7 +558,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Закрытие дропдаунов при клике вне
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.filter-item')) {
             closeAllDropdowns();

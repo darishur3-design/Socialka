@@ -1,5 +1,4 @@
-<
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -30,6 +29,48 @@
             transform: translateX(-5px);
         }
 
+        /* Вкладки */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-radius: 30px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+        }
+
+        .tab i {
+            margin-right: 8px;
+        }
+
+        .tab.active {
+            background: #4f8df5;
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: #f0f0f0;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Стили для страницы мероприятия */
         .event-header {
             margin-bottom: 30px;
             background: white;
@@ -214,6 +255,134 @@
             color: #4f8df5;
         }
 
+        /* Стили для вкладки участника */
+        .qr-section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .qr-code {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .qr-code img {
+            width: 250px;
+            height: 250px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .qr-title {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .qr-subtitle {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .scan-instruction {
+            background: #e8f0fe;
+            color: #4f8df5;
+            padding: 12px 24px;
+            border-radius: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            margin: 20px 0;
+        }
+
+        .participant-info {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-top: 20px;
+        }
+
+        .participant-info h3 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .participant-info h3 i {
+            color: #4f8df5;
+        }
+
+        .participant-info-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+
+        .participant-info-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .participant-info-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s;
+            margin-top: 20px;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #34ce57);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(40,167,69,0.3);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+            margin-left: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
         .loading {
             text-align: center;
             padding: 80px 20px;
@@ -271,18 +440,41 @@
     <aside class="sidebar">
         <button class="nav-btn" onclick="location.href='index.html'">🏠 Главная</button>
         <button class="nav-btn active" onclick="location.href='events.html'">📅 Мероприятия</button>
-        <!-- <button class="nav-btn" onclick="location.href='rating.html'">🏆 Рейтинг</button> -->
         <button class="nav-btn" onclick="location.href='organizations.html'">👥 Сообщества</button>
     </aside>
 
     <main class="content">
-        <a href="events.html" class="back-to-list">
-            <i class="fas fa-arrow-left"></i> К списку мероприятий
-        </a>
-        
-        <div class="event-page-container" id="eventContainer">
-            <div class="loading">
-                <i class="fas fa-spinner"></i> Загрузка мероприятия...
+        <div class="event-page">
+            <a href="events.html" class="back-to-list">
+                <i class="fas fa-arrow-left"></i> К списку мероприятий
+            </a>
+            
+            <!-- Вкладки -->
+            <div class="tabs">
+                <button class="tab active" id="infoTab" onclick="switchTab('info')">
+                    <i class="fas fa-info-circle"></i> Информация
+                </button>
+                <button class="tab" id="participantTab" onclick="switchTab('participant')">
+                    <i class="fas fa-qrcode"></i> Для участника
+                </button>
+            </div>
+            
+            <!-- Контент вкладки "Информация" -->
+            <div class="tab-content active" id="infoContent">
+                <div class="event-page-container" id="eventContainer">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i> Загрузка мероприятия...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Контент вкладки "Для участника" -->
+            <div class="tab-content" id="participantContent">
+                <div class="participant-container" id="participantContainer">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i> Загрузка данных участника...
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -290,6 +482,167 @@
 
 <script type="module" src="js/auth-state.js"></script>
 <script src="js/event-page.js"></script>
+<script>
+    function switchTab(tabName) {
+        const infoTab = document.getElementById('infoTab');
+        const participantTab = document.getElementById('participantTab');
+        const infoContent = document.getElementById('infoContent');
+        const participantContent = document.getElementById('participantContent');
+        
+        if (tabName === 'info') {
+            infoTab.classList.add('active');
+            participantTab.classList.remove('active');
+            infoContent.classList.add('active');
+            participantContent.classList.remove('active');
+        } else {
+            infoTab.classList.remove('active');
+            participantTab.classList.add('active');
+            infoContent.classList.remove('active');
+            participantContent.classList.add('active');
+            
+            // Загружаем данные участника
+            loadParticipantData();
+        }
+    }
 
+async function loadParticipantData() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const eventId = urlParams.get('id');
+    const container = document.getElementById('participantContainer');
+    
+    if (!eventId) return;
+    
+    container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Загрузка данных...</div>';
+    
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            container.innerHTML = '<p style="text-align: center; padding: 50px;">Необходимо авторизоваться</p>';
+            return;
+        }
+        
+        // Загружаем информацию о мероприятии
+        const eventResponse = await fetch(`http://localhost:8080/api/events/${eventId}`);
+        const event = await eventResponse.json();
+        
+        // Загружаем сообщество
+        const communityResponse = await fetch(`http://localhost:8080/api/communities/${event.community_id}`);
+        const community = await communityResponse.json();
+        
+        // Загружаем QR-код
+        const qrResponse = await fetch(`http://localhost:8080/api/events/${eventId}/participant-qr`, {
+            method: 'GET',
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!qrResponse.ok) {
+            throw new Error(`Ошибка загрузки QR-кода: ${qrResponse.status}`);
+        }
+        
+        const qrData = await qrResponse.json();
+        console.log('QR Data:', qrData);
+        
+        // Определяем класс статуса
+        const statusClass = event.status === 2 ? 'status-approved' : (event.status === 1 ? 'status-sent' : 'status-rejected');
+        const statusText = event.status === 2 ? 'Принято' : (event.status === 1 ? 'Отправлено' : 'Отклонено');
+        
+        container.innerHTML = `
+            <div class="qr-section">
+                <h2 class="qr-title">${event.title}</h2>
+                <p class="qr-subtitle">Ваш персональный QR-код для входа</p>
+                
+                <div class="qr-code">
+                    <img src="${qrData.qrCode}" style="width: 250px; height: 250px; display: block; margin: 0 auto; border-radius: 8px;">
+                </div>
+                
+                <div class="scan-instruction">
+                    <i class="fas fa-qrcode"></i>
+                    <span>Предъявите этот код при входе на мероприятие</span>
+                </div>
+                
+                <p style="font-size: 12px; color: #999; margin-top: 10px;">
+                    ID: ${qrData.qrData.substring(0, 20)}...
+                </p>
+            </div>
+            
+            <div class="participant-info">
+                <h3><i class="fas fa-info-circle"></i> Информация о мероприятии</h3>
+                
+                <div class="participant-info-item">
+                    <div class="participant-info-label">Название</div>
+                    <div class="participant-info-value">${event.title}</div>
+                </div>
+                
+                <div class="participant-info-item">
+                    <div class="participant-info-label">Сообщество</div>
+                    <div class="participant-info-value">${community.name}</div>
+                </div>
+                
+                <div class="participant-info-item">
+                    <div class="participant-info-label">Дата и время</div>
+                    <div class="participant-info-value">${event.date} ${event.time || '10:00'}</div>
+                </div>
+                
+                <div class="participant-info-item">
+                    <div class="participant-info-label">Место</div>
+                    <div class="participant-info-value">${event.location || 'Не указано'}</div>
+                </div>
+                
+                <div class="participant-info-item">
+                    <div class="participant-info-label">Формат</div>
+                    <div class="participant-info-value">${event.format || 'Офлайн'}</div>
+                </div>
+                
+                <div class="participant-info-item">
+                    <div class="participant-info-label">Статус</div>
+                    <div class="participant-info-value">
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </div>
+                </div>
+                
+                <div class="participant-info-item">
+                    <div class="participant-info-label">Описание</div>
+                    <div class="participant-info-value">${event.description || 'Нет описания'}</div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                    <button class="btn btn-success" onclick="downloadQRCode()">
+                        <i class="fas fa-download"></i> Скачать QR-код
+                    </button>
+                    <button class="btn btn-secondary" onclick="switchTab('info')">
+                        <i class="fas fa-arrow-left"></i> Назад
+                    </button>
+                </div>
+            </div>
+        `;
+        
+    } catch (error) {
+        console.error('Ошибка:', error);
+        container.innerHTML = `<p style="color: #ff4444; text-align: center; padding: 50px;">Ошибка: ${error.message}</p>`;
+    }
+}
+
+function downloadQRCode() {
+    const qrImg = document.querySelector('.qr-code img');
+    if (!qrImg) return;
+    
+    const link = document.createElement('a');
+    link.download = 'qr-code.png';
+    link.href = qrImg.src;
+    link.click();
+}
+    function downloadQRCode() {
+        const qrImg = document.querySelector('.qr-code img');
+        if (!qrImg) return;
+        
+        const link = document.createElement('a');
+        link.download = 'qr-code.png';
+        link.href = qrImg.src;
+        link.click();
+    }
+</script>
 </body>
 </html>

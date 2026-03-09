@@ -1,6 +1,7 @@
 // Получаем ID из URL
 const urlParams = new URLSearchParams(window.location.search);
 const communityId = urlParams.get('id');
+console.log('Community ID из URL:', communityId);
 
 // Функция для определения класса иконки по тематике
 function getIconClass(thematics) {
@@ -74,9 +75,22 @@ function getMonthWord(months) {
 // Загрузка участников сообщества для селекторов
 async function loadCommunityMembers() {
     try {
+        console.log('Загрузка участников для communityId:', communityId);
+        
+        if (!communityId) {
+            console.error('communityId не определен');
+            return [];
+        }
+        
         const response = await fetch(`http://localhost:8080/api/members_communities/community/${communityId}`);
-        if (!response.ok) throw new Error('Ошибка загрузки участников');
+        console.log('Статус ответа:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`Ошибка HTTP: ${response.status}`);
+        }
+        
         const members = await response.json();
+        console.log('Загруженные участники:', members);
         return members;
     } catch (error) {
         console.error('Ошибка загрузки участников:', error);
@@ -99,7 +113,10 @@ async function loadCommunityData() {
         document.getElementById('communityName').textContent = community.name;
         document.getElementById('communityTheme').textContent = community.thematics || 'Без тематики';
         
-        // Данные о главе сообщества
+        // Сохраняем данные о главе сообщества для формы
+        window.communityLeaderName = community.leader || 'Не назначен';
+        
+        // Отображаем главу сообщества на странице
         document.getElementById('communityLeader').textContent = community.leader || 'Не назначен';
         document.getElementById('communityCreationDate').textContent = 
             community.creationYear ? `${community.creationYear} год` : '—';
@@ -132,7 +149,7 @@ async function loadMembers(communityId) {
         }
         
         const members = await response.json();
-        console.log('Загружены участники:', members);
+        console.log('Загружены участники для таблицы:', members);
         
         renderMembers(members);
         
@@ -234,33 +251,201 @@ async function loadEvents(communityId) {
     }
 }
 
-// Модальное окно создания мероприятия
+// Функция для добавления строки команды
+function addTeamMemberRow(members) {
+    const container = document.getElementById('teamContainer');
+    if (!container) return;
+    
+    const newRow = document.createElement('div');
+    newRow.className = 'team-member-row';
+    newRow.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-bottom: 10px;';
+    
+    let selectHtml = '<select class="team-member-select" style="padding: 8px; border: 1px solid #e0e0e0; border-radius: 8px;">';
+    selectHtml += '<option value="">Выберите участника</option>';
+    if (members && members.length > 0) {
+        members.forEach(member => {
+            selectHtml += `<option value="${member.userId}">${member.userName}</option>`;
+        });
+    }
+    selectHtml += '</select>';
+    
+    newRow.innerHTML = `
+        ${selectHtml}
+        <input type="text" class="team-role" placeholder="Зона ответственности">
+        <button type="button" class="remove-team-btn" style="background: #ff6b6b; color: white; border: none; width: 30px; height: 30px; border-radius: 8px; cursor: pointer;">×</button>
+    `;
+    container.appendChild(newRow);
+    
+    newRow.querySelector('.remove-team-btn').addEventListener('click', () => {
+        newRow.remove();
+    });
+}
+
+// Функция для добавления строки сценарного плана
+function addTimelineRow(members) {
+    const container = document.getElementById('timelineContainer');
+    if (!container) return;
+    
+    const newRow = document.createElement('div');
+    newRow.className = 'timeline-row';
+    newRow.style.cssText = 'display: grid; grid-template-columns: 100px 1fr 1fr 1fr auto; gap: 10px; margin-bottom: 10px;';
+    
+    let selectHtml = '<select class="timeline-responsible-select" style="padding: 8px; border: 1px solid #e0e0e0; border-radius: 8px;">';
+    selectHtml += '<option value="">Ответственный</option>';
+    if (members && members.length > 0) {
+        members.forEach(member => {
+            selectHtml += `<option value="${member.userId}">${member.userName}</option>`;
+        });
+    }
+    selectHtml += '</select>';
+    
+    newRow.innerHTML = `
+        <input type="text" class="timeline-time" placeholder="Время">
+        <input type="text" class="timeline-place" placeholder="Место">
+        <input type="text" class="timeline-desc" placeholder="Что происходит">
+        ${selectHtml}
+        <button type="button" class="remove-timeline-btn" style="background: #ff6b6b; color: white; border: none; width: 30px; height: 30px; border-radius: 8px; cursor: pointer;">×</button>
+    `;
+    container.appendChild(newRow);
+    
+    newRow.querySelector('.remove-timeline-btn').addEventListener('click', () => {
+        newRow.remove();
+    });
+}
+
+// Функция для добавления строки бюджета
+function addBudgetRow() {
+    const container = document.getElementById('budgetContainer');
+    if (!container) return;
+    
+    const newRow = document.createElement('div');
+    newRow.className = 'budget-row';
+    newRow.style.cssText = 'display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; margin-bottom: 10px;';
+    newRow.innerHTML = `
+        <input type="text" class="budget-item" placeholder="Статья расходов">
+        <input type="number" class="budget-price" placeholder="Цена" min="0">
+        <input type="number" class="budget-quantity" placeholder="Кол-во" min="1" value="1">
+        <input type="text" class="budget-total" placeholder="Итого" readonly>
+        <button type="button" class="remove-budget-btn" style="background: #ff6b6b; color: white; border: none; width: 30px; height: 30px; border-radius: 8px; cursor: pointer;">×</button>
+    `;
+    container.appendChild(newRow);
+    
+    // Расчет итого
+    const priceInput = newRow.querySelector('.budget-price');
+    const quantityInput = newRow.querySelector('.budget-quantity');
+    const totalInput = newRow.querySelector('.budget-total');
+    
+    function calculateTotal() {
+        const price = parseFloat(priceInput.value) || 0;
+        const quantity = parseFloat(quantityInput.value) || 0;
+        totalInput.value = (price * quantity).toFixed(2);
+    }
+    
+    priceInput.addEventListener('input', calculateTotal);
+    quantityInput.addEventListener('input', calculateTotal);
+    
+    newRow.querySelector('.remove-budget-btn').addEventListener('click', () => {
+        newRow.remove();
+    });
+}
+
+// Функция для добавления строки МТО
+function addMtoRow() {
+    const container = document.getElementById('mtoContainer');
+    if (!container) return;
+    
+    const newRow = document.createElement('div');
+    newRow.className = 'mto-row';
+    newRow.style.cssText = 'display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-bottom: 10px;';
+    newRow.innerHTML = `
+        <input type="text" class="mto-item" placeholder="Наименование">
+        <button type="button" class="remove-mto-btn" style="background: #ff6b6b; color: white; border: none; width: 30px; height: 30px; border-radius: 8px; cursor: pointer;">×</button>
+    `;
+    container.appendChild(newRow);
+    
+    newRow.querySelector('.remove-mto-btn').addEventListener('click', () => {
+        newRow.remove();
+    });
+}
+
+// Функция для добавления строки печатной продукции
+function addPrintRow() {
+    const container = document.getElementById('printContainer');
+    if (!container) return;
+    
+    const newRow = document.createElement('div');
+    newRow.className = 'print-row';
+    newRow.style.cssText = 'display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; gap: 10px; margin-bottom: 10px;';
+    newRow.innerHTML = `
+        <input type="text" class="print-name" placeholder="Наименование">
+        <input type="text" class="print-format" placeholder="Формат" value="A4">
+        <input type="text" class="print-paper" placeholder="Бумага" value="Плотная">
+        <input type="number" class="print-price" placeholder="Цена" min="0">
+        <input type="number" class="print-quantity" placeholder="Кол-во" min="1" value="1">
+        <button type="button" class="remove-print-btn" style="background: #ff6b6b; color: white; border: none; width: 30px; height: 30px; border-radius: 8px; cursor: pointer;">×</button>
+    `;
+    container.appendChild(newRow);
+    
+    newRow.querySelector('.remove-print-btn').addEventListener('click', () => {
+        newRow.remove();
+    });
+}
+
+// ===== ЭЛЕМЕНТЫ DOM =====
 const modal = document.getElementById('eventModal');
 const createBtn = document.getElementById('createEventBtn');
 const closeBtn = document.getElementById('closeModal');
 const eventForm = document.getElementById('eventForm');
 
+// ===== ОБРАБОТЧИКИ =====
 if (createBtn) {
     createBtn.addEventListener('click', async () => {
+        console.log('Клик по кнопке создания мероприятия');
         modal.classList.add('active');
         
-        // Загружаем участников для селекторов
+        // Загружаем участников для селектора ответственных
         const members = await loadCommunityMembers();
+        console.log('Получены участники для селекторов:', members);
         
-        // Заполняем команду мероприятия (если есть)
+        // Заполняем селектор ответственных
+const responsibleSelect = document.getElementById('eventResponsible');
+if (responsibleSelect) {
+    responsibleSelect.innerHTML = '<option value="">Выберите ответственного</option>';
+    if (members && members.length > 0) {
+        members.forEach(member => {
+            // Используем member.id (ID из members_communities), а не member.userId
+            responsibleSelect.innerHTML += `<option value="${member.id}">${member.userName}</option>`;
+        });
+        console.log('Селектор ответственных заполнен, элементов:', members.length);
+    }
+}else {
+            console.error('Селектор eventResponsible не найден');
+        }
+        
+        // Отображаем руководителя (автоматически из данных сообщества)
+        const leaderDisplay = document.getElementById('communityLeaderDisplay');
+        const leaderHidden = document.getElementById('communityLeader');
+        
+        if (leaderDisplay && leaderHidden) {
+            // Получаем имя руководителя из глобальной переменной (установлено в loadCommunityData)
+            const leaderName = window.communityLeaderName || 'Не назначен';
+            leaderDisplay.textContent = leaderName;
+            leaderHidden.value = leaderName; // сохраняем в скрытое поле для отправки
+            console.log('Руководитель отображен:', leaderName);
+        }
+        
+        // Очищаем контейнеры
         const teamContainer = document.getElementById('teamContainer');
-        if (teamContainer.children.length === 0) {
-            // Добавляем первую строку по умолчанию
-            addTeamMemberRow(members);
-        }
-        
-        // Заполняем сценарный план (если есть)
         const timelineContainer = document.getElementById('timelineContainer');
-        if (timelineContainer.children.length === 0) {
-            // Добавляем две строки по умолчанию
-            addTimelineRow(members);
-            addTimelineRow(members);
-        }
+        const budgetContainer = document.getElementById('budgetContainer');
+        const mtoContainer = document.getElementById('mtoContainer');
+        const printContainer = document.getElementById('printContainer');
+        
+        if (teamContainer) teamContainer.innerHTML = '';
+        if (timelineContainer) timelineContainer.innerHTML = '';
+        if (budgetContainer) budgetContainer.innerHTML = '';
+        if (mtoContainer) mtoContainer.innerHTML = '';
+        if (printContainer) printContainer.innerHTML = '';
     });
 }
 
@@ -278,157 +463,22 @@ if (modal) {
     });
 }
 
-// Функция для добавления строки команды
-function addTeamMemberRow(members) {
-    const container = document.getElementById('teamContainer');
-    const newRow = document.createElement('div');
-    newRow.className = 'team-member-row';
-    newRow.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-bottom: 10px;';
-    
-    let selectHtml = '<select class="team-member-select" style="padding: 12px; border: 1px solid #e0e0e0; border-radius: 12px;">';
-    selectHtml += '<option value="">Выберите участника</option>';
-    members.forEach(member => {
-        selectHtml += `<option value="${member.userId}">${member.userName}</option>`;
-    });
-    selectHtml += '</select>';
-    
-    newRow.innerHTML = `
-        ${selectHtml}
-        <input type="text" class="team-role" placeholder="Зона ответственности">
-        <button type="button" class="remove-team-btn" style="background: #ff6b6b; color: white; border: none; width: 30px; height: 30px; border-radius: 8px; cursor: pointer;">×</button>
-    `;
-    container.appendChild(newRow);
-    
-    newRow.querySelector('.remove-team-btn').addEventListener('click', () => {
-        newRow.remove();
-    });
-}
-
-// В функции addTimelineRow - убираем value
-function addTimelineRow(members) {
-    const container = document.getElementById('timelineContainer');
-    const newRow = document.createElement('div');
-    newRow.className = 'timeline-row';
-    newRow.style.cssText = 'display: grid; grid-template-columns: 100px 1fr 1fr 1fr auto; gap: 10px; margin-bottom: 10px;';
-    
-    let selectHtml = '<select class="timeline-responsible-select" style="padding: 8px; border: 1px solid #e0e0e0; border-radius: 8px;">';
-    selectHtml += '<option value="">Ответственный</option>';
-    members.forEach(member => {
-        selectHtml += `<option value="${member.userId}">${member.userName}</option>`;
-    });
-    selectHtml += '</select>';
-    
-    newRow.innerHTML = `
-        <input type="text" class="timeline-time" placeholder="Время">
-        <input type="text" class="timeline-place" placeholder="Место">
-        <input type="text" class="timeline-desc" placeholder="Что происходит">
-        ${selectHtml}
-        <button type="button" class="remove-timeline-btn" style="background: #ff6b6b; color: white; border: none; width: 30px; height: 30px; border-radius: 8px; cursor: pointer;">×</button>
-    `;
-    container.appendChild(newRow);
-    
-    newRow.querySelector('.remove-timeline-btn').addEventListener('click', () => {
-        newRow.remove();
-    });
-}
-
-// При открытии модального окна НЕ добавляем строки по умолчанию
-if (createBtn) {
-    createBtn.addEventListener('click', async () => {
-        modal.classList.add('active');
-        
-        // Загружаем участников для селекторов, но НЕ добавляем строки автоматически
-        const members = await loadCommunityMembers();
-        
-        // Очищаем контейнеры от возможных старых строк
-        document.getElementById('teamContainer').innerHTML = '';
-        document.getElementById('timelineContainer').innerHTML = '';
-        document.getElementById('budgetContainer').innerHTML = '';
-        document.getElementById('mtoContainer').innerHTML = '';
-        document.getElementById('printContainer').innerHTML = '';
-    });
-}
-
-// Динамическое добавление полей формы
-document.getElementById('addTeamMemberBtn').addEventListener('click', async () => {
+// Кнопки добавления элементов
+document.getElementById('addTeamMemberBtn')?.addEventListener('click', async () => {
     const members = await loadCommunityMembers();
     addTeamMemberRow(members);
 });
 
-document.getElementById('addTimelineBtn').addEventListener('click', async () => {
+document.getElementById('addTimelineBtn')?.addEventListener('click', async () => {
     const members = await loadCommunityMembers();
     addTimelineRow(members);
 });
 
-document.getElementById('addBudgetBtn').addEventListener('click', () => {
-    const container = document.getElementById('budgetContainer');
-    const newRow = document.createElement('div');
-    newRow.className = 'budget-row';
-    newRow.style.cssText = 'display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; margin-bottom: 10px;';
-    newRow.innerHTML = `
-        <input type="text" class="budget-item" placeholder="Статья расходов">
-        <input type="number" class="budget-price" placeholder="Цена" min="0">
-        <input type="number" class="budget-quantity" placeholder="Кол-во" min="1" value="1">
-        <input type="text" class="budget-total" placeholder="Итого" readonly>
-        <button type="button" class="remove-budget-btn" style="background: #ff6b6b; color: white; border: none; width: 30px; height: 30px; border-radius: 8px; cursor: pointer;">×</button>
-    `;
-    container.appendChild(newRow);
-    
-    newRow.querySelector('.remove-budget-btn').addEventListener('click', () => {
-        newRow.remove();
-    });
-    
-    // Расчет итого
-    const priceInput = newRow.querySelector('.budget-price');
-    const quantityInput = newRow.querySelector('.budget-quantity');
-    const totalInput = newRow.querySelector('.budget-total');
-    
-    function calculateTotal() {
-        const price = parseFloat(priceInput.value) || 0;
-        const quantity = parseFloat(quantityInput.value) || 0;
-        totalInput.value = (price * quantity).toFixed(2);
-    }
-    
-    priceInput.addEventListener('input', calculateTotal);
-    quantityInput.addEventListener('input', calculateTotal);
-});
+document.getElementById('addBudgetBtn')?.addEventListener('click', addBudgetRow);
+document.getElementById('addMtoBtn')?.addEventListener('click', addMtoRow);
+document.getElementById('addPrintBtn')?.addEventListener('click', addPrintRow);
 
-document.getElementById('addMtoBtn').addEventListener('click', () => {
-    const container = document.getElementById('mtoContainer');
-    const newRow = document.createElement('div');
-    newRow.className = 'mto-row';
-    newRow.style.cssText = 'display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-bottom: 10px;';
-    newRow.innerHTML = `
-        <input type="text" class="mto-item" placeholder="Наименование">
-        <button type="button" class="remove-mto-btn" style="background: #ff6b6b; color: white; border: none; width: 30px; height: 30px; border-radius: 8px; cursor: pointer;">×</button>
-    `;
-    container.appendChild(newRow);
-    
-    newRow.querySelector('.remove-mto-btn').addEventListener('click', () => {
-        newRow.remove();
-    });
-});
-
-document.getElementById('addPrintBtn').addEventListener('click', () => {
-    const container = document.getElementById('printContainer');
-    const newRow = document.createElement('div');
-    newRow.className = 'print-row';
-    newRow.style.cssText = 'display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; gap: 10px; margin-bottom: 10px;';
-    newRow.innerHTML = `
-        <input type="text" class="print-name" placeholder="Наименование">
-        <input type="text" class="print-format" placeholder="Формат" value="A4">
-        <input type="text" class="print-paper" placeholder="Бумага" value="Плотная">
-        <input type="number" class="print-price" placeholder="Цена" min="0">
-        <input type="number" class="print-quantity" placeholder="Кол-во" min="1" value="1">
-        <button type="button" class="remove-print-btn" style="background: #ff6b6b; color: white; border: none; width: 30px; height: 30px; border-radius: 8px; cursor: pointer;">×</button>
-    `;
-    container.appendChild(newRow);
-    
-    newRow.querySelector('.remove-print-btn').addEventListener('click', () => {
-        newRow.remove();
-    });
-});
-
+// Отправка формы
 if (eventForm) {
     eventForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -440,7 +490,7 @@ if (eventForm) {
             return;
         }
         
-        // Проверяем наличие всех необходимых элементов
+        // Получаем значения полей
         const eventName = document.getElementById('eventName');
         const eventDescription = document.getElementById('eventFullDescription');
         const eventDate = document.getElementById('eventDate');
@@ -455,13 +505,18 @@ if (eventForm) {
         const eventQuantitative = document.getElementById('eventQuantitative');
         const eventQualitative = document.getElementById('eventQualitative');
         
-        // Проверяем, что все обязательные поля существуют
         if (!eventName || !eventDate || !eventPlace || !eventFormat || !eventResponsible) {
             alert('Ошибка: не все поля формы найдены');
             return;
         }
         
-        // Собираем данные для основного мероприятия
+        // Получаем имя выбранного руководителя
+        const leaderSelect = document.getElementById('communityLeader');
+        const leaderName = leaderSelect && leaderSelect.selectedIndex > 0 
+            ? leaderSelect.options[leaderSelect.selectedIndex].text 
+            : window.communityLeaderName || '';
+        
+        // Собираем данные
         const eventData = {
             name: eventName.value,
             description: eventDescription ? eventDescription.value : '',
@@ -469,22 +524,22 @@ if (eventForm) {
             place: eventPlace.value,
             format_id: parseInt(eventFormat.value),
             community_id: parseInt(communityId),
-            responsible: eventResponsible.value,
-            responsible_phone: responsiblePhone ? responsiblePhone.value : '',
-            community_leader: communityLeader ? communityLeader.value : '',
+            responsible: parseInt(eventResponsible.value),
+            community_leader: leaderName,
             smart_goal: eventSmartGoal ? eventSmartGoal.value : '',
             direction_id: eventDirection ? parseInt(eventDirection.value) : 1,
             target_audience: eventTargetAudience ? eventTargetAudience.value : '',
             quantitative: eventQuantitative ? eventQuantitative.value : '',
             qualitative: eventQualitative ? eventQualitative.value : '',
-            status: 1 // Отправлено
+            event_level: 1,
+            community_role_id: 1,
+            status: 1
         };
         
-        console.log('Отправляемые данные мероприятия:', eventData);
+        console.log('Отправляемые данные:', eventData);
         
         try {
-            // СОЗДАЕМ МЕРОПРИЯТИЕ
-            const eventResponse = await fetch('http://localhost:8080/api/events', {
+            const response = await fetch('http://localhost:8080/api/events', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -493,20 +548,14 @@ if (eventForm) {
                 body: JSON.stringify(eventData)
             });
             
-            if (!eventResponse.ok) {
-                const errorText = await eventResponse.text();
-                console.error('Ошибка ответа:', eventResponse.status, errorText);
-                throw new Error(`Ошибка создания мероприятия: ${eventResponse.status}`);
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Ошибка ответа:', response.status, errorText);
+                throw new Error(`Ошибка создания: ${response.status}`);
             }
             
-            const createdEvent = await eventResponse.json();
-            console.log('Мероприятие создано:', createdEvent);
-            
-            const newEventId = createdEvent.id || createdEvent.eventId;
-            
-            if (!newEventId) {
-                throw new Error('Не удалось получить ID созданного мероприятия');
-            }
+            const result = await response.json();
+            console.log('Мероприятие создано:', result);
             
             alert('Мероприятие успешно создано!');
             modal.classList.remove('active');
@@ -515,7 +564,7 @@ if (eventForm) {
             
         } catch (error) {
             console.error('Ошибка:', error);
-            alert('Произошла ошибка: ' + error.message);
+            alert('Ошибка: ' + error.message);
         }
     });
 }
@@ -532,13 +581,11 @@ if (sortSelect) {
 const reportBtn = document.getElementById('createReportBtn');
 if (reportBtn) {
     reportBtn.addEventListener('click', () => {
-        // Нужно выбрать мероприятие для отчета
         const events = document.querySelectorAll('.event-item');
         if (events.length === 0) {
-            alert('Нет мероприятий для создания отчета');
+            alert('Нет мероприятий для отчета');
             return;
         }
-        // По умолчанию берем первое мероприятие
         const firstEventId = events[0]?.getAttribute('onclick')?.match(/\d+/)?.[0];
         if (firstEventId) {
             window.location.href = `event-report.html?id=${firstEventId}`;
@@ -547,5 +594,6 @@ if (reportBtn) {
         }
     });
 }
+
 // Загружаем данные при загрузке страницы
 document.addEventListener('DOMContentLoaded', loadCommunityData);

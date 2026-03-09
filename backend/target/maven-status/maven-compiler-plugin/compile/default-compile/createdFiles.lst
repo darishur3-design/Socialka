@@ -17,6 +17,7 @@ ru\nngasu\socialka\repository\EventTimelineRepository.class
 ru\nngasu\socialka\controller\EventTimelineController.class
 ru\nngasu\socialka\dto\UserProfileDTO.class
 ru\nngasu\socialka\service\UserService.class
+ru\nngasu\socialka\service\QRCodeService.class
 ru\nngasu\socialka\config\CorsConfig.class
 ru\nngasu\socialka\controller\EventController.class
 ru\nngasu\socialka\controller\EventPrintMaterialsController.class
@@ -35,6 +36,7 @@ ru\nngasu\socialka\service\CommunityService.class
 ru\nngasu\socialka\controller\CommunityController.class
 ru\nngasu\socialka\model\Organizer.class
 ru\nngasu\socialka\SocialkaApplication.class
+ru\nngasu\socialka\controller\EventParticipantController.class
 ru\nngasu\socialka\controller\HelloController.class
 ru\nngasu\socialka\model\User.class
 ru\nngasu\socialka\repository\UserRepository.class

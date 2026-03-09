@@ -220,9 +220,13 @@ async function viewEventDetails(eventId) {
         
         const eventResponse = await fetch(`http://localhost:8080/api/events/${eventId}`);
         const event = await eventResponse.json();
+        console.log('Детали мероприятия:', event);
         
         const community = communities.find(c => c.id === event.community_id);
         const status = STATUS_TEXT[event.status] || { text: 'Неизвестно', class: '' };
+        
+        // Используем event.location, так как в API поле называется "location"
+        const eventPlace = event.location || event.place || 'Не указано';
         
         let detailsHtml = `
             <div class="details-section">
@@ -237,7 +241,7 @@ async function viewEventDetails(eventId) {
                     <strong>Дата:</strong> ${event.date} ${event.time || ''}
                 </div>
                 <div class="details-item">
-                    <strong>Место:</strong> ${event.place || 'Не указано'}
+                    <strong>Место:</strong> ${eventPlace}
                 </div>
                 <div class="details-item">
                     <strong>Статус:</strong> <span class="event-status ${status.class}">${status.text}</span>
@@ -683,7 +687,7 @@ if (eventForm) {
             return;
         }
         
-        // Проверяем наличие всех необходимых элементов
+        // Получаем значения полей
         const eventName = document.getElementById('eventName');
         const eventDescription = document.getElementById('eventFullDescription');
         const eventDate = document.getElementById('eventDate');
@@ -699,12 +703,16 @@ if (eventForm) {
         const eventQualitative = document.getElementById('eventQualitative');
         const eventCommunity = document.getElementById('eventCommunity');
         
+        // Получаем текстовое имя выбранного руководителя (не ID!)
+        const leaderSelect = document.getElementById('communityLeader');
+        const leaderName = leaderSelect.options[leaderSelect.selectedIndex]?.text || '';
+        
         if (!eventName || !eventDate || !eventPlace || !eventFormat || !eventResponsible || !eventCommunity) {
             alert('Ошибка: не все поля формы найдены');
             return;
         }
         
-        // Собираем данные для основного мероприятия
+        // Собираем данные с правильными типами
         const eventData = {
             name: eventName.value,
             description: eventDescription ? eventDescription.value : '',
@@ -712,15 +720,17 @@ if (eventForm) {
             place: eventPlace.value,
             format_id: parseInt(eventFormat.value),
             community_id: parseInt(eventCommunity.value),
-            responsible: eventResponsible.value,
+            responsible: parseInt(eventResponsible.value), // ID из members_communities
             responsible_phone: responsiblePhone ? responsiblePhone.value : '',
-            community_leader: communityLeader ? communityLeader.value : '',
+            community_leader: leaderName, // ТЕКСТ (имя), не ID!
             smart_goal: eventSmartGoal ? eventSmartGoal.value : '',
             direction_id: eventDirection ? parseInt(eventDirection.value) : 1,
             target_audience: eventTargetAudience ? eventTargetAudience.value : '',
             quantitative: eventQuantitative ? eventQuantitative.value : '',
             qualitative: eventQualitative ? eventQualitative.value : '',
-            status: STATUS.SENT // Отправлено
+            event_level: 1, // Обычное мероприятие
+            community_role_id: 1, // Организатор
+            status: 1 // Отправлено (статус из events_status)
         };
         
         console.log('Отправляемые данные мероприятия:', eventData);
@@ -747,7 +757,7 @@ if (eventForm) {
             alert('Заявка успешно отправлена!');
             eventModal.classList.remove('active');
             eventForm.reset();
-            loadData(); // Перезагружаем список мероприятий
+            loadData();
             
         } catch (error) {
             console.error('Ошибка:', error);
