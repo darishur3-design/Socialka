@@ -2,7 +2,6 @@
 const urlParams = new URLSearchParams(window.location.search);
 const eventId = urlParams.get('id');
 
-// Функция переключения вкладок
 window.switchTab = function(tabName) {
     const infoTab = document.getElementById('infoTab');
     const participantTab = document.getElementById('participantTab');
@@ -19,83 +18,50 @@ window.switchTab = function(tabName) {
         participantTab.classList.add('active');
         infoContent.classList.remove('active');
         participantContent.classList.add('active');
-        
-        // Загружаем данные участника
         loadParticipantData();
     }
 };
 
 async function loadParticipantData() {
     const container = document.getElementById('participantContainer');
-    
     if (!eventId) return;
     
     container.innerHTML = '<div class="loading">Загрузка...</div>';
     
     try {
         const token = localStorage.getItem('token');
-        if (!token) {
-            container.innerHTML = '<p>Необходимо авторизоваться</p>';
-            return;
-        }
-        
-        // Загружаем информацию о мероприятии
-        const eventResponse = await fetch(`http://localhost:8080/api/events/${eventId}`);
-        const event = await eventResponse.json();
-        
-        // Загружаем сообщество
-        const communityResponse = await fetch(`http://localhost:8080/api/communities/${event.community_id}`);
-        const community = await communityResponse.json();
-        
-        // Загружаем QR-код
-        const qrResponse = await fetch(`http://localhost:8080/api/events/${eventId}/participant-qr`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+        const response = await fetch(`http://localhost:8080/api/events/${eventId}`, {
+            headers: { "Authorization": `Bearer ${token}` }
         });
-        
-        let qrHtml = '';
-        if (qrResponse.ok) {
-            const qrData = await qrResponse.json();
-            qrHtml = `<img src="${qrData.qrCode}" style="width: 250px; height: 250px; display: block; margin: 0 auto; border-radius: 8px;">`;
-        } else {
-            qrHtml = '<p style="color: #ff4444;">Ошибка загрузки QR-кода</p>';
-        }
-        
+        const event = await response.json();
+
         container.innerHTML = `
-            <div style="text-align: center; padding: 20px;">
-                <h2>Ваш QR-код на мероприятие</h2>
-                <div style="margin: 20px 0;">
-                    ${qrHtml}
-                </div>
-                <p style="color: #666; margin: 20px;">Предъявите этот код при входе на мероприятие</p>
-                
-                <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; text-align: left; margin-top: 30px;">
-                    <h3>Информация о мероприятии</h3>
-                    <p><strong>Название:</strong> ${event.title}</p>
-                    <p><strong>Сообщество:</strong> ${community.name}</p>
-                    <p><strong>Дата:</strong> ${event.date} ${event.time || '10:00'}</p>
-                    <p><strong>Место:</strong> ${event.location || 'Не указано'}</p>
-                    <p><strong>Формат:</strong> ${event.format || 'Офлайн'}</p>
-                    <p><strong>Описание:</strong> ${event.description || 'Нет описания'}</p>
+            <div class="participant-info" style="text-align: center;">
+                <div class="qr-code-container" style="background: white; padding: 20px; border-radius: 16px; display: inline-block; margin-bottom: 20px;">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=event_${event.id}_user" id="qrImage">
                 </div>
                 
-                <button onclick="downloadQRCode()" style="margin-top: 20px; padding: 12px 30px; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                    Скачать QR-код
+                <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; text-align: left; margin-top: 20px; border: 1px solid #e2e8f0;">
+                    <h3 style="color: #4f8df5; margin-bottom: 15px; border-bottom: 2px solid #4f8df5; padding-bottom: 5px;">Полный паспорт мероприятия</h3>
+                    <div style="display: grid; gap: 10px; font-size: 0.95rem;">
+                        <p><strong>Название:</strong> ${event.title}</p>
+                        <p><strong>Цель:</strong> ${event.goal || 'Не указана'}</p>
+                        <p><strong>Задачи:</strong> ${event.tasks || 'Не указаны'}</p>
+                        <p><strong>Дата и время:</strong> ${event.date} в ${event.time || '10:00'}</p>
+                        <p><strong>Место:</strong> ${event.location}</p>
+                        <p><strong>Формат:</strong> ${event.format}</p>
+                        <p><strong>МТО:</strong> ${event.mto || 'Не требуется'}</p>
+                        <p><strong>Печатная продукция:</strong> ${event.printing || 'Не требуется'}</p>
+                        <p><strong>Описание:</strong> ${event.description}</p>
+                    </div>
+                </div>
+                
+                <button onclick="downloadQRCode()" class="auth-btn" style="margin-top: 20px; width: 100%;">
+                    <i class="fas fa-download"></i> Скачать QR-код
                 </button>
             </div>
         `;
-        
     } catch (error) {
-        console.error('Ошибка:', error);
-        container.innerHTML = '<p style="color: #ff4444;">Ошибка загрузки</p>';
+        container.innerHTML = '<p style="color: red;">Ошибка загрузки полного паспорта</p>';
     }
 }
-
-window.downloadQRCode = function() {
-    const qrImg = document.querySelector('#participantContainer img');
-    if (!qrImg) return;
-    
-    const link = document.createElement('a');
-    link.download = 'qr-code.png';
-    link.href = qrImg.src;
-    link.click();
-};

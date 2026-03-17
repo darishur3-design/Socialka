@@ -420,6 +420,29 @@
             text-align: center;
             padding: 30px;
         }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 15px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .status-sent {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
     </style>
 </head>
 <body>
@@ -472,7 +495,7 @@
             <div class="tab-content" id="participantContent">
                 <div class="participant-container" id="participantContainer">
                     <div class="loading">
-                        <i class="fas fa-spinner fa-spin"></i> Загрузка данных участника...
+                        <i class="fas fa-spinner fa-spin"></i> Загрузка паспорта мероприятия...
                     </div>
                 </div>
             </div>
@@ -505,135 +528,152 @@
         }
     }
 
-async function loadParticipantData() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const eventId = urlParams.get('id');
-    const container = document.getElementById('participantContainer');
-    
-    if (!eventId) return;
-    
-    container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Загрузка данных...</div>';
-    
-    try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            container.innerHTML = '<p style="text-align: center; padding: 50px;">Необходимо авторизоваться</p>';
-            return;
-        }
+    async function loadParticipantData() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const eventId = urlParams.get('id');
+        const container = document.getElementById('participantContainer');
         
-        // Загружаем информацию о мероприятии
-        const eventResponse = await fetch(`http://localhost:8080/api/events/${eventId}`);
-        const event = await eventResponse.json();
+        if (!eventId) return;
         
-        // Загружаем сообщество
-        const communityResponse = await fetch(`http://localhost:8080/api/communities/${event.community_id}`);
-        const community = await communityResponse.json();
+        container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Загрузка паспорта мероприятия...</div>';
         
-        // Загружаем QR-код
-        const qrResponse = await fetch(`http://localhost:8080/api/events/${eventId}/participant-qr`, {
-            method: 'GET',
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                container.innerHTML = '<p style="text-align: center; padding: 50px;">Необходимо авторизоваться</p>';
+                return;
             }
-        });
-        
-        if (!qrResponse.ok) {
-            throw new Error(`Ошибка загрузки QR-кода: ${qrResponse.status}`);
-        }
-        
-        const qrData = await qrResponse.json();
-        console.log('QR Data:', qrData);
-        
-        // Определяем класс статуса
-        const statusClass = event.status === 2 ? 'status-approved' : (event.status === 1 ? 'status-sent' : 'status-rejected');
-        const statusText = event.status === 2 ? 'Принято' : (event.status === 1 ? 'Отправлено' : 'Отклонено');
-        
-        container.innerHTML = `
-            <div class="qr-section">
-                <h2 class="qr-title">${event.title}</h2>
-                <p class="qr-subtitle">Ваш персональный QR-код для входа</p>
-                
-                <div class="qr-code">
-                    <img src="${qrData.qrCode}" style="width: 250px; height: 250px; display: block; margin: 0 auto; border-radius: 8px;">
-                </div>
-                
-                <div class="scan-instruction">
-                    <i class="fas fa-qrcode"></i>
-                    <span>Предъявите этот код при входе на мероприятие</span>
-                </div>
-                
-                <p style="font-size: 12px; color: #999; margin-top: 10px;">
-                    ID: ${qrData.qrData.substring(0, 20)}...
-                </p>
-            </div>
             
-            <div class="participant-info">
-                <h3><i class="fas fa-info-circle"></i> Информация о мероприятии</h3>
-                
-                <div class="participant-info-item">
-                    <div class="participant-info-label">Название</div>
-                    <div class="participant-info-value">${event.title}</div>
-                </div>
-                
-                <div class="participant-info-item">
-                    <div class="participant-info-label">Сообщество</div>
-                    <div class="participant-info-value">${community.name}</div>
-                </div>
-                
-                <div class="participant-info-item">
-                    <div class="participant-info-label">Дата и время</div>
-                    <div class="participant-info-value">${event.date} ${event.time || '10:00'}</div>
-                </div>
-                
-                <div class="participant-info-item">
-                    <div class="participant-info-label">Место</div>
-                    <div class="participant-info-value">${event.location || 'Не указано'}</div>
-                </div>
-                
-                <div class="participant-info-item">
-                    <div class="participant-info-label">Формат</div>
-                    <div class="participant-info-value">${event.format || 'Офлайн'}</div>
-                </div>
-                
-                <div class="participant-info-item">
-                    <div class="participant-info-label">Статус</div>
-                    <div class="participant-info-value">
-                        <span class="status-badge ${statusClass}">${statusText}</span>
+            // Загружаем полную информацию о мероприятии
+            const eventResponse = await fetch(`http://localhost:8080/api/events/${eventId}`);
+            if (!eventResponse.ok) throw new Error('Ошибка загрузки мероприятия');
+            const event = await eventResponse.json();
+            
+            // Загружаем сообщество
+            const communityResponse = await fetch(`http://localhost:8080/api/communities/${event.community_id}`);
+            const community = await communityResponse.json();
+            
+            // Загружаем QR-код
+            const qrResponse = await fetch(`http://localhost:8080/api/events/${eventId}/participant-qr`, {
+                method: 'GET',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!qrResponse.ok) {
+                throw new Error(`Ошибка загрузки QR-кода: ${qrResponse.status}`);
+            }
+            
+            const qrData = await qrResponse.json();
+
+            // Определяем статус
+            const statusClass = event.status === 2 ? 'status-approved' : (event.status === 1 ? 'status-sent' : 'status-rejected');
+            const statusText = event.status === 2 ? 'Принято' : (event.status === 1 ? 'Отправлено' : 'Отклонено');
+
+            // Форматируем булевы значения
+            const formatMTO = (mto) => mto ? 'Да' : 'Нет';
+            const formatPrint = (print) => print ? 'Да' : 'Нет';
+            
+            container.innerHTML = `
+                <div class="qr-section">
+                    <h2 class="qr-title">${event.title}</h2>
+                    <p class="qr-subtitle">Ваш персональный QR-код для входа</p>
+                    
+                    <div class="qr-code">
+                        <img src="${qrData.qrCode}" style="width: 250px; height: 250px; display: block; margin: 0 auto; border-radius: 8px;">
+                    </div>
+                    
+                    <div class="scan-instruction">
+                        <i class="fas fa-qrcode"></i>
+                        <span>Предъявите этот код при входе на мероприятие</span>
                     </div>
                 </div>
                 
-                <div class="participant-info-item">
-                    <div class="participant-info-label">Описание</div>
-                    <div class="participant-info-value">${event.description || 'Нет описания'}</div>
+                <div class="participant-info">
+                    <h3><i class="fas fa-passport"></i> Паспорт мероприятия</h3>
+                    
+                    <div class="participant-info-item">
+                        <div class="participant-info-label">Название</div>
+                        <div class="participant-info-value">${event.title}</div>
+                    </div>
+                    <div class="participant-info-item">
+                        <div class="participant-info-label">Сообщество</div>
+                        <div class="participant-info-value">${community.name}</div>
+                    </div>
+                    <div class="participant-info-item">
+                        <div class="participant-info-label">Руководитель сообщества</div>
+                        <div class="participant-info-value">${event.community_leader || 'Не указан'}</div>
+                    </div>
+                    <div class="participant-info-item">
+                        <div class="participant-info-label">Ответственный</div>
+                        <div class="participant-info-value">${event.responsible_name || 'Не указан'}</div>
+                    </div>
+                    <div class="participant-info-item">
+                        <div class="participant-info-label">Дата и время</div>
+                        <div class="participant-info-value">${event.date} ${event.time || '10:00'}</div>
+                    </div>
+                    <div class="participant-info-item">
+                        <div class="participant-info-label">Место</div>
+                        <div class="participant-info-value">${event.location || event.place || 'Не указано'}</div>
+                    </div>
+                    <div class="participant-info-item">
+                        <div class="participant-info-label">Формат</div>
+                        <div class="participant-info-value">${event.format || 'Офлайн'}</div>
+                    </div>
+                    <div class="participant-info-item">
+                        <div class="participant-info-label">SMART-цель</div>
+                        <div class="participant-info-value">${event.smart_goal || 'Не указана'}</div>
+                    </div>
+                    <div class="participant-info-item">
+                        <div class="participant-info-label">Целевая аудитория</div>
+                        <div class="participant-info-value">${event.target_audience || 'Не указана'}</div>
+                    </div>
+                    <div class="participant-info-item">
+                        <div class="participant-info-label">Количественные показатели</div>
+                        <div class="participant-info-value">${event.quantitative || 'Не указаны'}</div>
+                    </div>
+                    <div class="participant-info-item">
+                        <div class="participant-info-label">Качественные показатели</div>
+                        <div class="participant-info-value">${event.qualitative || 'Не указаны'}</div>
+                    </div>
+                    <div class="participant-info-item">
+                        <div class="participant-info-label">МТО</div>
+                        <div class="participant-info-value">${formatMTO(event.mto)}</div>
+                    </div>
+                    <div class="participant-info-item">
+                        <div class="participant-info-label">Печатная продукция</div>
+                        <div class="participant-info-value">${formatPrint(event.printing)}</div>
+                    </div>
+                    <div class="participant-info-item">
+                        <div class="participant-info-label">Статус мероприятия</div>
+                        <div class="participant-info-value">
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                    </div>
+                    <div class="participant-info-item">
+                        <div class="participant-info-label">Полное описание</div>
+                        <div class="participant-info-value" style="white-space: pre-line;">${event.description || 'Нет описания'}</div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                        <button class="btn btn-success" onclick="downloadQRCode()">
+                            <i class="fas fa-download"></i> Скачать QR-код
+                        </button>
+                        <button class="btn btn-secondary" onclick="switchTab('info')">
+                            <i class="fas fa-arrow-left"></i> Назад
+                        </button>
+                    </div>
                 </div>
-                
-                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
-                    <button class="btn btn-success" onclick="downloadQRCode()">
-                        <i class="fas fa-download"></i> Скачать QR-код
-                    </button>
-                    <button class="btn btn-secondary" onclick="switchTab('info')">
-                        <i class="fas fa-arrow-left"></i> Назад
-                    </button>
-                </div>
-            </div>
-        `;
-        
-    } catch (error) {
-        console.error('Ошибка:', error);
-        container.innerHTML = `<p style="color: #ff4444; text-align: center; padding: 50px;">Ошибка: ${error.message}</p>`;
+            `;
+            
+        } catch (error) {
+            console.error('Ошибка:', error);
+            container.innerHTML = `<p style="color: #ff4444; text-align: center; padding: 50px;">Ошибка загрузки паспорта: ${error.message}</p>`;
+        }
     }
-}
 
-function downloadQRCode() {
-    const qrImg = document.querySelector('.qr-code img');
-    if (!qrImg) return;
-    
-    const link = document.createElement('a');
-    link.download = 'qr-code.png';
-    link.href = qrImg.src;
-    link.click();
-}
     function downloadQRCode() {
         const qrImg = document.querySelector('.qr-code img');
         if (!qrImg) return;
@@ -643,6 +683,13 @@ function downloadQRCode() {
         link.href = qrImg.src;
         link.click();
     }
+</script>
+<script>
+    fetch('footer.html')
+        .then(response => response.text())
+        .then(data => {
+            document.body.insertAdjacentHTML('beforeend', data);
+        });
 </script>
 </body>
 </html>

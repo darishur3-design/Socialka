@@ -1,0 +1,155 @@
+<footer class="footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <h3><i class="fas fa-university"></i> ННГАСУ</h3>
+            <p>Нижегородский государственный архитектурно-строительный университет</p>
+            <p>© 2026 Socialka — учет социальной активности студентов</p>
+        </div>
+        
+        <div class="footer-section">
+            <h3><i class="fas fa-link"></i> Быстрые ссылки</h3>
+            <a href="index.html">Главная</a>
+            <a href="events.html">Мероприятия</a>
+            <a href="organizations.html">Сообщества</a>
+            <a href="profile.html">Профиль</a>
+        </div>
+        
+        <div class="footer-section">
+            <h3><i class="fas fa-phone"></i> Контакты</h3>
+            <p><i class="fas fa-map-marker-alt"></i> г. Нижний Новгород, ул. Ильинская, 65</p>
+            <p><i class="fas fa-envelope"></i> s45302925@gmail.com</p>
+            
+            <div class="social-links">
+                <a href="https://vk.com/college.nngasu" target="_blank" class="social-link vk" title="ВКонтакте">
+                    <i class="fab fa-vk"></i>
+                </a>
+                <a href="https://t.me/nngasu" target="_blank" class="social-link tg" title="Telegram">
+                    <i class="fab fa-telegram-plane"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer-bottom">
+        <p>Разработано для управления социальной активностью студентов ННГАСУ</p>
+    </div>
+</footer>
+
+<style>
+/* Общие стили футера */
+.footer {
+    background: white;
+    padding: 40px 30px 20px;
+    margin-top: 60px;
+    border-radius: 30px 30px 0 0;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.03);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footer-section h3 {
+    color: #1e293b;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.footer-section h3 i { color: #4f8df5; }
+.footer-section p, .footer-section a { color: #64748b; font-size: 14px; text-decoration: none; margin-bottom: 10px; display: block; }
+.footer-section a:hover { color: #4f8df5; padding-left: 5px; transition: 0.2s; }
+
+/* СОЦИАЛЬНЫЕ КНОПКИ */
+.social-links {
+    display: flex;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.social-link {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+    color: #64748b;
+    text-decoration: none !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.social-link i {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: all 0.3s ease;
+}
+
+/* Настройки ВК */
+.social-link.vk {
+    border-radius: 12px;
+}
+.social-link.vk i {
+    font-size: 40px; /* Изначально крупная */
+}
+
+/* Настройки ТГ */
+.social-link.tg {
+    border-radius: 50%;
+}
+.social-link.tg i {
+    font-size: 44px; /* Изначально крупная */
+    margin-right: 2px; /* Микро-фикс центра самолета */
+}
+
+/* ЭФФЕКТЫ ПРИ НАВЕДЕНИИ */
+.social-link:hover {
+    transform: translateY(-3px);
+    color: white !important;
+}
+
+/* ВК при наведении */
+.social-link.vk:hover {
+    background: #0077ff;
+}
+.social-link.vk:hover i {
+    transform: scale(0.8); /* Уменьшаем до 80% для аккуратного вида */
+}
+
+/* ТГ при наведении */
+.social-link.tg:hover {
+    background: #229ED9;
+}
+.social-link.tg:hover i {
+    /* Уменьшаем иконку, чтобы она была "внутри" круга и центрируем */
+    transform: scale(0.75); 
+}
+
+/* Подвал */
+.footer-bottom {
+    text-align: center;
+    padding-top: 30px;
+    margin-top: 30px;
+    border-top: 1px solid #f1f5f9;
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+@media (max-width: 768px) {
+    .footer-content { grid-template-columns: 1fr; text-align: center; }
+    .footer-section h3, .social-links { justify-content: center; }
+}
+</style>

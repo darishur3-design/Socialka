@@ -582,6 +582,11 @@
         .export-btn:hover {
             background: linear-gradient(135deg, #218838, #28a745);
         }
+        
+        .required-star {
+            color: #ff4444;
+            margin-left: 3px;
+        }
     </style>
 </head>
 <body>
@@ -719,12 +724,12 @@
             </h3>
             
             <div class="form-group">
-                <label>Название мероприятия <span style="color: #ff4444;">*</span></label>
+                <label>Название мероприятия <span class="required-star">*</span></label>
                 <input type="text" id="eventName" required placeholder="Например: Открывающая игротека">
             </div>
             
             <div class="form-group">
-                <label>Сообщество <span style="color: #ff4444;">*</span></label>
+                <label>Сообщество <span class="required-star">*</span></label>
                 <select id="eventCommunity" required>
                     <option value="">Выберите сообщество</option>
                 </select>
@@ -732,14 +737,14 @@
             
             <div class="form-row">
                 <div class="form-group">
-                    <label>Ответственный за проведение <span style="color: #ff4444;">*</span></label>
+                    <label>Ответственный за проведение <span class="required-star">*</span></label>
                     <select id="eventResponsible" required class="form-control">
                         <option value="">Выберите ответственного</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label>Руководитель студенческого сообщества <span style="color: #ff4444;">*</span></label>
+                    <label>Руководитель студенческого сообщества <span class="required-star">*</span></label>
                     <select id="communityLeader" required class="form-control">
                         <option value="">Выберите руководителя</option>
                     </select>
@@ -747,7 +752,7 @@
             </div>
 
             <div class="form-group">
-                <label>Телефон ответственного <span style="color: #ff4444;">*</span></label>
+                <label>Телефон ответственного <span class="required-star">*</span></label>
                 <input type="tel" id="responsiblePhone" required placeholder="+7 (___) ___-__-__">
             </div>
             
@@ -772,7 +777,7 @@
             
             <div class="form-row">
                 <div class="form-group">
-                    <label>Дата проведения <span style="color: #ff4444;">*</span></label>
+                    <label>Дата проведения <span class="required-star">*</span></label>
                     <input type="date" id="eventDate" required>
                 </div>
                 <div class="form-group">
@@ -782,7 +787,7 @@
             </div>
             
             <div class="form-group">
-                <label>Место проведения <span style="color: #ff4444;">*</span></label>
+                <label>Место проведения <span class="required-star">*</span></label>
                 <input type="text" id="eventPlace" required placeholder="Например: Точка Урбан 1">
             </div>
             
@@ -796,13 +801,13 @@
             </div>
             
             <div class="form-group">
-                <label>Полное описание мероприятия</label>
-                <textarea id="eventFullDescription" rows="6" placeholder="Подробное описание..."></textarea>
+                <label>Полное описание мероприятия <span class="required-star">*</span></label>
+                <textarea id="eventFullDescription" required rows="6" placeholder="Подробное описание..."></textarea>
             </div>
             
             <div class="form-group">
-                <label>Цель проведения (по SMART)</label>
-                <textarea id="eventSmartGoal" rows="3" placeholder="Конкретная, измеримая цель..."></textarea>
+                <label>Цель проведения (по SMART) <span class="required-star">*</span></label>
+                <textarea id="eventSmartGoal" required rows="3" placeholder="Конкретная, измеримая цель..."></textarea>
             </div>
             
             <div class="form-group">
@@ -816,18 +821,18 @@
             </div>
             
             <div class="form-group">
-                <label>Целевая аудитория</label>
-                <input type="text" id="eventTargetAudience" placeholder="Например: Студенты ННГАСУ">
+                <label>Целевая аудитория <span class="required-star">*</span></label>
+                <input type="text" id="eventTargetAudience" required placeholder="Например: Студенты ННГАСУ">
             </div>
             
             <div class="form-row">
                 <div class="form-group">
-                    <label>Количественные показатели</label>
-                    <input type="text" id="eventQuantitative" placeholder="Например: 15 участников, 5 игр">
+                    <label>Количественные показатели <span class="required-star">*</span></label>
+                    <input type="text" id="eventQuantitative" required placeholder="Например: 15 участников, 5 игр">
                 </div>
                 <div class="form-group">
-                    <label>Качественные показатели</label>
-                    <input type="text" id="eventQualitative" placeholder="На что направлено">
+                    <label>Качественные показатели <span class="required-star">*</span></label>
+                    <input type="text" id="eventQualitative" required placeholder="На что направлено">
                 </div>
             </div>
             
@@ -910,5 +915,12 @@
 
 <script type="module" src="js/auth-state.js"></script>
 <script src="js/profkom-management.js"></script>
+<script>
+    fetch('footer.html')
+        .then(response => response.text())
+        .then(data => {
+            document.body.insertAdjacentHTML('beforeend', data);
+        });
+</script>
 </body>
 </html>
