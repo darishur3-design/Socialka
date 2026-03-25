@@ -352,6 +352,64 @@
             padding-right: 30px;
         }
 
+        /* Стили для паспорта мероприятия в модальном окне */
+        .event-details-modal .modal-content {
+            max-width: 650px;
+        }
+
+        #detailsContent {
+            max-height: 70vh;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        #detailsContent::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #detailsContent::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+
+        #detailsContent::-webkit-scrollbar-thumb {
+            background: #4f8df5;
+            border-radius: 3px;
+        }
+
+        .passport-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .passport-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .passport-value {
+            font-size: 15px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .passport-value-large {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .description-box {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 5px;
+            line-height: 1.5;
+        }
+
         .form-section {
             margin-bottom: 25px;
             padding: 15px;
@@ -535,46 +593,6 @@
             background: #f0f0f0;
         }
 
-        .event-details-modal .modal-content {
-            max-width: 1000px;
-        }
-
-        .details-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-
-        .details-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-
-        .details-section h4 {
-            color: #4f8df5;
-            margin-bottom: 15px;
-            font-size: 16px;
-        }
-
-        .details-item {
-            margin-bottom: 10px;
-            padding: 8px;
-            background: white;
-            border-radius: 8px;
-        }
-
-        .details-label {
-            font-size: 12px;
-            color: #666;
-        }
-
-        .details-value {
-            font-weight: 500;
-            color: #333;
-        }
-
         .export-btn {
             background: linear-gradient(135deg, #28a745, #34ce57);
         }
@@ -711,7 +729,7 @@
     </main>
 </div>
 
-<!-- Модальное окно создания паспорта мероприятия (полная версия) -->
+<!-- Модальное окно создания паспорта мероприятия -->
 <div class="modal" id="eventModal">
     <div class="modal-content">
         <button class="modal-close" id="closeModal">&times;</button>
@@ -782,7 +800,7 @@
                 </div>
                 <div class="form-group">
                     <label>Время начала</label>
-                    <input type="time" id="eventTime" placeholder="например: 17:00">
+                    <input type="time" id="eventTime" value="10:00">
                 </div>
             </div>
             
@@ -901,7 +919,7 @@
 <div class="modal event-details-modal" id="detailsModal">
     <div class="modal-content">
         <button class="modal-close" id="closeDetailsModal">&times;</button>
-        <h2 class="modal-title" id="detailsTitle">Детали мероприятия</h2>
+        <h2 class="modal-title" id="detailsTitle">Паспорт мероприятия</h2>
         
         <div id="detailsContent"></div>
         

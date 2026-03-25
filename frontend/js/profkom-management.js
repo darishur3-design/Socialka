@@ -219,57 +219,151 @@ async function viewEventDetails(eventId) {
         console.log('Загрузка деталей мероприятия:', eventId);
         
         const eventResponse = await fetch(`http://localhost:8080/api/events/${eventId}`);
+        if (!eventResponse.ok) throw new Error('Ошибка загрузки мероприятия');
         const event = await eventResponse.json();
         console.log('Детали мероприятия:', event);
         
-        const community = communities.find(c => c.id === event.community_id);
+        let community = null;
+        if (event.community_id) {
+            const communityResponse = await fetch(`http://localhost:8080/api/communities/${event.community_id}`);
+            if (communityResponse.ok) {
+                community = await communityResponse.json();
+            }
+        }
+        
         const status = STATUS_TEXT[event.status] || { text: 'Неизвестно', class: '' };
         
-        // Используем event.location, так как в API поле называется "location"
+        const formatDate = (dateString) => {
+            if (!dateString) return 'Не указана';
+            return dateString;
+        };
+        
+        let mtoText = 'Нет';
+        if (event.mto) {
+            if (typeof event.mto === 'boolean') mtoText = event.mto ? 'Да' : 'Нет';
+            else if (typeof event.mto === 'string' && event.mto) mtoText = event.mto;
+            else if (Array.isArray(event.mto) && event.mto.length > 0) mtoText = event.mto.map(i => i.name || i).join(', ');
+        }
+        
+        let printText = 'Нет';
+        if (event.printing) {
+            if (typeof event.printing === 'boolean') printText = event.printing ? 'Да' : 'Нет';
+            else if (typeof event.printing === 'string' && event.printing) printText = event.printing;
+            else if (Array.isArray(event.printing) && event.printing.length > 0) printText = event.printing.map(p => p.name || p).join(', ');
+        }
+        
         const eventPlace = event.location || event.place || 'Не указано';
         
         let detailsHtml = `
-            <div class="details-section">
-                <h4>Основная информация</h4>
-                <div class="details-item">
-                    <strong>Название:</strong> ${event.title}
-                </div>
-                <div class="details-item">
-                    <strong>Сообщество:</strong> ${community?.name || 'Неизвестно'}
-                </div>
-                <div class="details-item">
-                    <strong>Дата:</strong> ${event.date} ${event.time || ''}
-                </div>
-                <div class="details-item">
-                    <strong>Место:</strong> ${eventPlace}
-                </div>
-                <div class="details-item">
-                    <strong>Статус:</strong> <span class="event-status ${status.class}">${status.text}</span>
-                </div>
-                <div class="details-item">
-                    <strong>Описание:</strong><br>
-                    ${event.description || 'Нет описания'}
+            <div style="font-family: inherit;">
+                <div style="display: grid; gap: 12px;">
+                    <div class="passport-item">
+                        <div class="passport-label">НАЗВАНИЕ</div>
+                        <div class="passport-value-large">${event.title || 'Не указано'}</div>
+                    </div>
+                    
+                    <div class="passport-item">
+                        <div class="passport-label">СООБЩЕСТВО</div>
+                        <div class="passport-value">${community?.name || 'Не указано'}</div>
+                    </div>
+                    
+                    <div class="passport-item">
+                        <div class="passport-label">РУКОВОДИТЕЛЬ СООБЩЕСТВА</div>
+                        <div class="passport-value">${event.community_leader || community?.leader || 'Не указан'}</div>
+                    </div>
+                    
+                    <div class="passport-item">
+                        <div class="passport-label">ОТВЕТСТВЕННЫЙ</div>
+                        <div class="passport-value">${event.responsible_name || event.responsible || 'Не указан'}</div>
+                    </div>
+                    
+                    <div class="passport-item">
+                        <div class="passport-label">ДАТА И ВРЕМЯ</div>
+                        <div class="passport-value">${formatDate(event.date)} ${event.time || '10:00'}</div>
+                    </div>
+                    
+                    <div class="passport-item">
+                        <div class="passport-label">МЕСТО</div>
+                        <div class="passport-value">${eventPlace}</div>
+                    </div>
+                    
+                    <div class="passport-item">
+                        <div class="passport-label">ФОРМАТ</div>
+                        <div class="passport-value">${event.format || 'Офлайн'}</div>
+                    </div>
+                    
+                    <div class="passport-item">
+                        <div class="passport-label">ЦЕЛЬ (SMART)</div>
+                        <div class="passport-value">${event.smart_goal || 'Не указана'}</div>
+                    </div>
+                    
+                    <div class="passport-item">
+                        <div class="passport-label">ЦЕЛЕВАЯ АУДИТОРИЯ</div>
+                        <div class="passport-value">${event.target_audience || 'Не указана'}</div>
+                    </div>
+                    
+                    <div class="passport-item">
+                        <div class="passport-label">КОЛИЧЕСТВЕННЫЕ ПОКАЗАТЕЛИ</div>
+                        <div class="passport-value">${event.quantitative || 'Не указаны'}</div>
+                    </div>
+                    
+                    <div class="passport-item">
+                        <div class="passport-label">КАЧЕСТВЕННЫЕ ПОКАЗАТЕЛИ</div>
+                        <div class="passport-value">${event.qualitative || 'Не указаны'}</div>
+                    </div>
+                    
+                    <div class="passport-item">
+                        <div class="passport-label">МТО</div>
+                        <div class="passport-value">${mtoText}</div>
+                    </div>
+                    
+                    <div class="passport-item">
+                        <div class="passport-label">ПЕЧАТНАЯ ПРОДУКЦИЯ</div>
+                        <div class="passport-value">${printText}</div>
+                    </div>
+                    
+                    <div class="passport-item">
+                        <div class="passport-label">СТАТУС МЕРОПРИЯТИЯ</div>
+                        <div class="passport-value">
+                            <span class="event-status ${status.class}" style="display: inline-block; padding: 4px 12px; border-radius: 20px;">${status.text}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="passport-item">
+                        <div class="passport-label">ОПИСАНИЕ МЕРОПРИЯТИЯ</div>
+                        <div class="description-box">
+                            ${event.description || 'Нет описания'}
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
         
-        document.getElementById('detailsTitle').textContent = event.title;
+        document.getElementById('detailsTitle').textContent = 'Паспорт мероприятия';
         document.getElementById('detailsContent').innerHTML = detailsHtml;
         
         const actionsDiv = document.getElementById('detailsActions');
         if (event.status === STATUS.SENT) {
             actionsDiv.style.display = 'flex';
+            const approveBtn = document.getElementById('approveEventBtn');
+            const rejectBtn = document.getElementById('rejectEventBtn');
+            if (approveBtn) approveBtn.style.display = 'block';
+            if (rejectBtn) rejectBtn.style.display = 'block';
             document.getElementById('approveEventBtn').onclick = () => updateEventStatus(eventId, STATUS.APPROVED);
             document.getElementById('rejectEventBtn').onclick = () => updateEventStatus(eventId, STATUS.REJECTED);
         } else {
-            actionsDiv.style.display = 'none';
+            actionsDiv.style.display = 'flex';
+            const approveBtn = document.getElementById('approveEventBtn');
+            const rejectBtn = document.getElementById('rejectEventBtn');
+            if (approveBtn) approveBtn.style.display = 'none';
+            if (rejectBtn) rejectBtn.style.display = 'none';
         }
         
         document.getElementById('detailsModal').classList.add('active');
         
     } catch (error) {
         console.error('Ошибка загрузки деталей:', error);
-        alert('Не удалось загрузить детали мероприятия');
+        alert('Не удалось загрузить детали мероприятия: ' + error.message);
     }
 }
 
@@ -413,7 +507,6 @@ function exportToCSV() {
 
 // ========== ФУНКЦИИ ДЛЯ ФОРМЫ СОЗДАНИЯ МЕРОПРИЯТИЯ ==========
 
-// Загрузка участников сообщества для селекторов
 async function loadCommunityMembers(communityId) {
     try {
         const response = await fetch(`http://localhost:8080/api/members_communities/community/${communityId}`);
@@ -427,7 +520,6 @@ async function loadCommunityMembers(communityId) {
     }
 }
 
-// Функция для добавления строки команды
 function addTeamMemberRow(members) {
     const container = document.getElementById('teamContainer');
     if (!container) return;
@@ -455,7 +547,6 @@ function addTeamMemberRow(members) {
     });
 }
 
-// Функция для добавления строки сценарного плана
 function addTimelineRow(members) {
     const container = document.getElementById('timelineContainer');
     if (!container) return;
@@ -485,7 +576,6 @@ function addTimelineRow(members) {
     });
 }
 
-// Функция для добавления строки бюджета
 function addBudgetRow() {
     const container = document.getElementById('budgetContainer');
     if (!container) return;
@@ -502,7 +592,6 @@ function addBudgetRow() {
     `;
     container.appendChild(newRow);
     
-    // Расчет итого
     const priceInput = newRow.querySelector('.budget-price');
     const quantityInput = newRow.querySelector('.budget-quantity');
     const totalInput = newRow.querySelector('.budget-total');
@@ -521,7 +610,6 @@ function addBudgetRow() {
     });
 }
 
-// Функция для добавления строки МТО
 function addMtoRow() {
     const container = document.getElementById('mtoContainer');
     if (!container) return;
@@ -540,7 +628,6 @@ function addMtoRow() {
     });
 }
 
-// Функция для добавления строки печатной продукции
 function addPrintRow() {
     const container = document.getElementById('printContainer');
     if (!container) return;
@@ -575,7 +662,6 @@ if (createEventBtn) {
     createEventBtn.addEventListener('click', async () => {
         eventModal.classList.add('active');
         
-        // Заполняем селект сообществ
         const communitySelect = document.getElementById('eventCommunity');
         if (communitySelect) {
             communitySelect.innerHTML = '<option value="">Выберите сообщество</option>';
@@ -584,14 +670,12 @@ if (createEventBtn) {
             });
         }
         
-        // Очищаем все контейнеры
         document.getElementById('teamContainer').innerHTML = '';
         document.getElementById('timelineContainer').innerHTML = '';
         document.getElementById('budgetContainer').innerHTML = '';
         document.getElementById('mtoContainer').innerHTML = '';
         document.getElementById('printContainer').innerHTML = '';
         
-        // Очищаем селекторы ответственных и руководителей
         const responsibleSelect = document.getElementById('eventResponsible');
         const leaderSelect = document.getElementById('communityLeader');
         if (responsibleSelect) responsibleSelect.innerHTML = '<option value="">Выберите ответственного</option>';
@@ -599,7 +683,6 @@ if (createEventBtn) {
     });
 }
 
-// Обработчик изменения сообщества для загрузки участников
 document.getElementById('eventCommunity')?.addEventListener('change', async (e) => {
     const communityId = e.target.value;
     if (!communityId) return;
@@ -607,26 +690,23 @@ document.getElementById('eventCommunity')?.addEventListener('change', async (e) 
     const members = await loadCommunityMembers(communityId);
     console.log('Участники выбранного сообщества:', members);
     
-    // Заполняем селектор ответственных
     const responsibleSelect = document.getElementById('eventResponsible');
     if (responsibleSelect) {
         responsibleSelect.innerHTML = '<option value="">Выберите ответственного</option>';
         members.forEach(member => {
-            responsibleSelect.innerHTML += `<option value="${member.userId}">${member.userName}</option>`;
+            responsibleSelect.innerHTML += `<option value="${member.id}">${member.userName}</option>`;
         });
     }
     
-    // Заполняем селектор руководителей
     const leaderSelect = document.getElementById('communityLeader');
     if (leaderSelect) {
         leaderSelect.innerHTML = '<option value="">Выберите руководителя</option>';
         members.forEach(member => {
-            leaderSelect.innerHTML += `<option value="${member.userId}">${member.userName}</option>`;
+            leaderSelect.innerHTML += `<option value="${member.id}">${member.userName}</option>`;
         });
     }
 });
 
-// Кнопки добавления элементов
 document.getElementById('addTeamMemberBtn')?.addEventListener('click', async () => {
     const communityId = document.getElementById('eventCommunity')?.value;
     if (!communityId) {
@@ -651,7 +731,6 @@ document.getElementById('addBudgetBtn')?.addEventListener('click', addBudgetRow)
 document.getElementById('addMtoBtn')?.addEventListener('click', addMtoRow);
 document.getElementById('addPrintBtn')?.addEventListener('click', addPrintRow);
 
-// Закрытие модального окна
 if (closeModalBtn) {
     closeModalBtn.addEventListener('click', () => {
         eventModal.classList.remove('active');
@@ -675,7 +754,7 @@ if (eventModal) {
     });
 }
 
-// Отправка формы
+// ========== ОТПРАВКА ФОРМЫ ==========
 if (eventForm) {
     eventForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -691,6 +770,7 @@ if (eventForm) {
         const eventName = document.getElementById('eventName');
         const eventDescription = document.getElementById('eventFullDescription');
         const eventDate = document.getElementById('eventDate');
+        const eventTime = document.getElementById('eventTime');
         const eventPlace = document.getElementById('eventPlace');
         const eventFormat = document.getElementById('eventFormat');
         const eventResponsible = document.getElementById('eventResponsible');
@@ -703,34 +783,77 @@ if (eventForm) {
         const eventQualitative = document.getElementById('eventQualitative');
         const eventCommunity = document.getElementById('eventCommunity');
         
-        // Получаем текстовое имя выбранного руководителя (не ID!)
+        // Получаем имя руководителя
         const leaderSelect = document.getElementById('communityLeader');
         const leaderName = leaderSelect.options[leaderSelect.selectedIndex]?.text || '';
+        
+        // Получаем имя ответственного
+        const responsibleSelect = document.getElementById('eventResponsible');
+        const responsibleName = responsibleSelect.options[responsibleSelect.selectedIndex]?.text || '';
         
         if (!eventName || !eventDate || !eventPlace || !eventFormat || !eventResponsible || !eventCommunity) {
             alert('Ошибка: не все поля формы найдены');
             return;
         }
         
-        // Собираем данные с правильными типами
+        // Проверяем заполнение обязательных полей
+        if (!eventName.value.trim()) {
+            alert('Введите название мероприятия');
+            return;
+        }
+        if (!eventDate.value) {
+            alert('Выберите дату проведения');
+            return;
+        }
+        if (!eventPlace.value.trim()) {
+            alert('Введите место проведения');
+            return;
+        }
+        if (!eventResponsible.value) {
+            alert('Выберите ответственного');
+            return;
+        }
+        if (!responsiblePhone.value.trim()) {
+            alert('Введите телефон ответственного');
+            return;
+        }
+        if (!eventSmartGoal.value.trim()) {
+            alert('Введите цель мероприятия (по SMART)');
+            return;
+        }
+        if (!eventTargetAudience.value.trim()) {
+            alert('Введите целевую аудиторию');
+            return;
+        }
+        if (!eventQuantitative.value.trim()) {
+            alert('Введите количественные показатели');
+            return;
+        }
+        if (!eventQualitative.value.trim()) {
+            alert('Введите качественные показатели');
+            return;
+        }
+        
+        // Формируем данные для отправки
         const eventData = {
             name: eventName.value,
             description: eventDescription ? eventDescription.value : '',
             date: eventDate.value,
+            time: eventTime ? eventTime.value : '10:00',
             place: eventPlace.value,
             format_id: parseInt(eventFormat.value),
             community_id: parseInt(eventCommunity.value),
-            responsible: parseInt(eventResponsible.value), // ID из members_communities
-            responsible_phone: responsiblePhone ? responsiblePhone.value : '',
-            community_leader: leaderName, // ТЕКСТ (имя), не ID!
-            smart_goal: eventSmartGoal ? eventSmartGoal.value : '',
+            responsible: parseInt(eventResponsible.value),
+            responsible_phone: responsiblePhone.value,
+            community_leader: leaderName,
+            smart_goal: eventSmartGoal.value,
             direction_id: eventDirection ? parseInt(eventDirection.value) : 1,
-            target_audience: eventTargetAudience ? eventTargetAudience.value : '',
-            quantitative: eventQuantitative ? eventQuantitative.value : '',
-            qualitative: eventQualitative ? eventQualitative.value : '',
-            event_level: 1, // Обычное мероприятие
-            community_role_id: 1, // Организатор
-            status: 1 // Отправлено (статус из events_status)
+            target_audience: eventTargetAudience.value,
+            quantitative: eventQuantitative.value,
+            qualitative: eventQualitative.value,
+            event_level: 1,
+            community_role_id: 1,
+            status: 1
         };
         
         console.log('Отправляемые данные мероприятия:', eventData);
@@ -757,7 +880,14 @@ if (eventForm) {
             alert('Заявка успешно отправлена!');
             eventModal.classList.remove('active');
             eventForm.reset();
-            loadData();
+            
+            document.getElementById('teamContainer').innerHTML = '';
+            document.getElementById('timelineContainer').innerHTML = '';
+            document.getElementById('budgetContainer').innerHTML = '';
+            document.getElementById('mtoContainer').innerHTML = '';
+            document.getElementById('printContainer').innerHTML = '';
+            
+            await loadData();
             
         } catch (error) {
             console.error('Ошибка:', error);
